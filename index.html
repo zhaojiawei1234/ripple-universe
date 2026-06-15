@@ -617,7 +617,23 @@ const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || 
 const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
 // ==================== CONFIG ====================
-const API = window.location.origin;
+// Use tunnel backend if on GitHub Pages, else local
+const API = (location.hostname.includes('github.io'))
+  ? 'https://milk-micro-prisoners-resistant.trycloudflare.com'
+  : window.location.origin;
+
+// Real online explorer tracking
+let explorerId = Math.random().toString(36).slice(2,10);
+let onlineInterval = null;
+
+function heartbeat(){
+  if(!backendOnline) return;
+  fetch(API+'/api/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:explorerId}),signal:AbortSignal.timeout(2000)}).then(r=>r.json()).then(d=>{
+    if(d&&d.onlineCount!==undefined){
+      document.getElementById('liveCount').textContent=d.onlineCount;
+    }
+  }).catch(()=>{});
+}
 let backendOnline = false;
 let totalStarsFromBackend = 0;
 let myStars = parseInt(localStorage.getItem('ripple_my_stars')||'0');
@@ -1244,10 +1260,9 @@ async function init(){
   document.getElementById('myStarCount').textContent=myStars;
   document.getElementById('liveCount').textContent=Math.max(1,commitStarMeshes.length>0?Math.floor(commitStarMeshes.length*0.1+1):1);
 
-  // Update live count periodically
-  setInterval(()=>{
-    document.getElementById('liveCount').textContent=Math.max(1,Math.floor(Math.random()*5+(commitStarMeshes.length>0?commitStarMeshes.length*0.05:1)));
-  },8000);
+  // Start real heartbeat for online explorer count
+  heartbeat();
+  onlineInterval = setInterval(heartbeat, 15000);
 
   // Poll backend
   setInterval(async()=>{await checkBackend();updateConnectionUI()},15000);

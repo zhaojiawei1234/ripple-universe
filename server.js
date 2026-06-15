@@ -57,6 +57,18 @@ function validateSession(store, sid) {
   return store.sessions.some(s => s.id === sid);
 }
 
+// ==================== Online Explorer Tracker ====================
+const onlineExplorers = new Map(); // id -> lastSeen timestamp
+const EXPLORER_TTL = 30000; // 30 seconds timeout
+
+function cleanupExplorers() {
+  const now = Date.now();
+  for (const [id, lastSeen] of onlineExplorers) {
+    if (now - lastSeen > EXPLORER_TTL) onlineExplorers.delete(id);
+  }
+}
+setInterval(cleanupExplorers, 10000);
+
 // ==================== Express App ====================
 const app = express();
 app.use(compression());
@@ -170,6 +182,14 @@ app.get('/api/stats', (req, res) => {
     rippleCount, pledgeCount, actionCount, viewCount, topActions,
     peopleImpacted: rippleCount * 9 + pledgeCount * 3,
   });
+});
+
+// Heartbeat - track online explorers
+app.post('/api/heartbeat', (req, res) => {
+  const { id } = req.body || {};
+  if (id) onlineExplorers.set(id, Date.now());
+  cleanupExplorers();
+  res.json({ onlineCount: onlineExplorers.size });
 });
 
 // Select an action (public)
