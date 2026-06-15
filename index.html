@@ -671,14 +671,14 @@ function playChime(freq=440){
 // ==================== THREE.JS SETUP ====================
 const canvas = document.getElementById('universe');
 const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,3));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 3));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2('#020210', 0.00025);
+if (!isMobile) scene.fog = new THREE.FogExp2('#020210', 0.00025);
 const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 1, 1000);
 camera.position.set(0, 0, 30);
 
@@ -868,7 +868,7 @@ function updateConstellations() {
 // ==================== COMMITMENT STARS (real data) ====================
 const commitStarsGroup = new THREE.Group();
 scene.add(commitStarsGroup);
-const starGeo = new THREE.SphereGeometry(0.18, 32, 32);
+const starGeo = new THREE.SphereGeometry(0.18, isMobile ? 16 : 32, isMobile ? 16 : 32);
 let commitStarMeshes = [];
 
 // Pre-create glow texture (shared by all stars)
