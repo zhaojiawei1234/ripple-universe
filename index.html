@@ -670,10 +670,12 @@ function playChime(freq=440){
 
 // ==================== THREE.JS SETUP ====================
 const canvas = document.getElementById('universe');
-const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,3));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2('#020210', 0.00025);
@@ -732,11 +734,11 @@ glowSprite.scale.set(10,10,1);
 orb.add(glowSprite);
 
 function createGlowTexture(){
-  const c=document.createElement('canvas');c.width=128;c.height=128;
+  const c=document.createElement('canvas');c.width=256;c.height=256;
   const ctx=c.getContext('2d');
-  const g=ctx.createRadialGradient(64,64,0,64,64,64);
-  g.addColorStop(0,'rgba(0,210,255,1)');g.addColorStop(0.2,'rgba(108,92,231,0.8)');g.addColorStop(0.5,'rgba(0,100,200,0.2)');g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=g;ctx.fillRect(0,0,128,128);
+  const g=ctx.createRadialGradient(128,128,0,128,128,128);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(0.05,'rgba(0,210,255,1)');g.addColorStop(0.2,'rgba(108,92,231,0.7)');g.addColorStop(0.5,'rgba(0,80,200,0.15)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,256,256);
   const tex=new THREE.CanvasTexture(c);tex.needsUpdate=true;return tex;
 }
 
@@ -800,7 +802,7 @@ orb.add(streamGroup);
 const streamLines = [];
 function createStreamLine() {
   const points = [];
-  const segments = 30;
+  const segments = 60;
   const maxDist = 4 + Math.random() * 5;
   const angle = Math.random() * Math.PI * 2;
   const tilt = (Math.random() - 0.5) * Math.PI;
@@ -866,17 +868,19 @@ function updateConstellations() {
 // ==================== COMMITMENT STARS (real data) ====================
 const commitStarsGroup = new THREE.Group();
 scene.add(commitStarsGroup);
-const starGeo = new THREE.SphereGeometry(0.15, 8, 8);
+const starGeo = new THREE.SphereGeometry(0.18, 32, 32);
 let commitStarMeshes = [];
 
 // Pre-create glow texture (shared by all stars)
 const sharedGlowTex = (()=>{
-  const c=document.createElement('canvas');c.width=16;c.height=16;
+  const c=document.createElement('canvas');c.width=64;c.height=64;
   const ctx=c.getContext('2d');
-  const g=ctx.createRadialGradient(8,8,0,8,8,8);
-  g.addColorStop(0,'rgba(255,255,255,0.7)');g.addColorStop(0.4,'rgba(0,210,255,0.3)');g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=g;ctx.fillRect(0,0,16,16);
-  return new THREE.CanvasTexture(c);
+  const g=ctx.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,0.9)');g.addColorStop(0.1,'rgba(0,210,255,0.7)');g.addColorStop(0.4,'rgba(0,150,220,0.2)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
 })();
 
 function createCommitStar(pledge, index){
