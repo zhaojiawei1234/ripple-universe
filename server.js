@@ -72,6 +72,7 @@ setInterval(cleanupExplorers, 10000);
 // ==================== Express App ====================
 const app = express();
 app.use(compression());
+app.use(require('cors')());
 app.use(express.json());
 
 // Cache static assets for 1 hour

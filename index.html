@@ -617,16 +617,9 @@ const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || 
 const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
 // ==================== CONFIG ====================
-// Dynamic API: on static hosting, fetch backend URL from config; else use local
-let API = window.location.origin;
+const BACKEND_URL = 'https://b13bbbe963f0dc42-112-9-88-253.serveousercontent.com';
 const isStaticHost = location.hostname.includes('github.io') || location.hostname.includes('lianyiyuzhou.xyz');
-if (isStaticHost) {
-  fetch(location.origin + '/api-url.json', {cache:'no-cache'})
-    .then(r=>r.json()).then(url=>{API=url;console.log('API connected:',API);
-      checkBackend().then(()=>{if(backendOnline){updateConnectionUI();updateLiveStats();loadCommitStars();loadWallPledges()}})
-    })
-    .catch(()=>{API=null;console.log('API offline')});
-}
+const API = isStaticHost ? BACKEND_URL : window.location.origin;
 
 // Real online explorer tracking
 let explorerId = Math.random().toString(36).slice(2,10);
