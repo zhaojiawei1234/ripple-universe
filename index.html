@@ -243,14 +243,14 @@ async function submit(){
   document.getElementById('bigNum').textContent=starMeshes.length.toLocaleString();
   document.getElementById('myStars').textContent=myCount;
   document.getElementById('center').style.opacity='.3';
-  toast(_('submitOk'));loadWall();
+  toast(_('submitOk'));window.loadWall();
 }
 document.getElementById('commitBtn').addEventListener('click',submit);
 document.getElementById('commitInput').addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
 
 // Wall
 let wallOpen=false;
-window.toggleWall=function(){wallOpen=!wallOpen;document.getElementById('wall').classList.toggle('open',wallOpen);if(wallOpen)loadWall()}
+window.toggleWall=function(){wallOpen=!wallOpen;document.getElementById('wall').classList.toggle('open',wallOpen);if(wallOpen)window.loadWall()}
 window.loadWall=async function(){
   var list=document.getElementById('wallList'),pledges=[];
   if(window.backend){try{var r=await fetch(window.API+'/api/pledges?limit=100',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
@@ -259,7 +259,7 @@ window.loadWall=async function(){
   if(!pledges.length){list.innerHTML='<div class="wall-empty">🌊 '+_('wallEmpty')+'</div>';return}
   list.innerHTML=pledges.map(p=>'<div class="wall-item"><div class="wa">'+(p.avatar||'🌟')+'</div><div><div class="wt">'+(p.text||'').replace(/</g,'&lt;')+'</div><div class="wm">'+(p.created_at?new Date(p.created_at).toLocaleDateString('zh-CN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'')+'</div></div></div>').join('')
 }
-loadWall();setInterval(loadWall,5000);
+window.loadWall();setInterval(window.loadWall,5000);
 
 // Raycaster
 const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
