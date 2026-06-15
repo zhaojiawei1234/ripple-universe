@@ -122,7 +122,7 @@ canvas#c{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
 </div>
 
 <script>
-// i18n
+// i18n + backend
 const t={zh:{connecting:'连接中…',online:'已连接宇宙',offline:'离线',stars:'星辰',onlineLabel:'在线',myStars:'我的星辰',placeholder:'我承诺…',btn:'✦ 发射星辰',hint:'Enter 发射 · 拖拽旋转宇宙 · 滚轮缩放',tapHint:'🫧 点击宇宙 · 创造涟漪 · 拖拽探索',wallTitle:'💬 涟漪墙',wallEmpty:'🌊 还没有涟漪，来做第一个',loading:'正在进入宇宙…',submitOk:'🌟 星辰诞生！',submitEmpty:'✍️ 写下你的承诺',subText:'颗星辰在宇宙中闪耀'},en:{connecting:'Connecting…',online:'Connected',offline:'Offline',stars:'stars',onlineLabel:'Online',myStars:'My Stars',placeholder:'I promise…',btn:'✦ Launch Star',hint:'Enter · Drag · Scroll',tapHint:'🫧 Tap space · Create ripple · Drag to explore',wallTitle:'💬 Ripple Wall',wallEmpty:'🌊 No ripples yet. Be the first.',loading:'Entering the universe…',submitOk:'🌟 Star born!',submitEmpty:'✍️ Write your promise',subText:'stars shining in the universe'},ja:{connecting:'接続中…',online:'接続済み',offline:'オフライン',stars:'星',onlineLabel:'オンライン',myStars:'私の星',placeholder:'私は約束します…',btn:'✦ 星を放つ',hint:'Enter · ドラッグ · スクロール',tapHint:'🫧 宇宙をタップ · 波紋を作る',wallTitle:'💬 波紋ウォール',wallEmpty:'🌊 まだ波紋がありません',loading:'宇宙に入っています…',submitOk:'🌟 星が誕生！',submitEmpty:'✍️ 約束を書いてください',subText:'個の星が宇宙で輝いている'},ko:{connecting:'연결 중…',online:'연결됨',offline:'오프라인',stars:'별',onlineLabel:'온라인',myStars:'내 별',placeholder:'나는 약속합니다…',btn:'✦ 별 발사',hint:'Enter · 드래그 · 스크롤',tapHint:'🫧 우주 탭 · 물결 만들기',wallTitle:'💬 물결 담벼락',wallEmpty:'🌊 아직 물결이 없습니다',loading:'우주에 들어가는 중…',submitOk:'🌟 별 탄생!',submitEmpty:'✍️ 약속을 적어주세요',subText:'개의 별이 우주에서 빛나고 있습니다'},es:{connecting:'Conectando…',online:'Conectado',offline:'Desconectado',stars:'estrellas',onlineLabel:'En línea',myStars:'Mis Estrellas',placeholder:'Prometo…',btn:'✦ Lanzar Estrella',hint:'Enter · Arrastrar · Desplazar',tapHint:'🫧 Toca el espacio · Crea ondas',wallTitle:'💬 Muro de Ondas',wallEmpty:'🌊 Sin ondas aún. Sé el primero.',loading:'Entrando al universo…',submitOk:'🌟 ¡Estrella nacida!',submitEmpty:'✍️ Escribe tu promesa',subText:'estrellas brillando en el universo'},fr:{connecting:'Connexion…',online:'Connecté',offline:'Déconnecté',stars:'étoiles',onlineLabel:'En ligne',myStars:'Mes Étoiles',placeholder:'Je promets…',btn:'✦ Lancer l\'Étoile',hint:'Entrée · Glisser · Défiler',tapHint:'🫧 Touchez l\'espace · Créez des ondes',wallTitle:'💬 Mur d\'Ondes',wallEmpty:'🌊 Pas encore d\'ondes.',loading:'Entrée dans l\'univers…',submitOk:'🌟 Étoile née!',submitEmpty:'✍️ Écrivez votre promesse',subText:'étoiles brillent dans l\'univers'}};
 let lang=localStorage.getItem('lang')||'zh';if(!t[lang])lang='zh';
 function _(k){return t[lang]&&t[lang][k]||t.en[k]||k}
@@ -144,12 +144,13 @@ updateI18n();
 
 // Backend
 const isStatic=(/github\.io|lianyiyuzhou\.xyz/.test(location.hostname));
-const API=isStatic?'https://b13bbbe963f0dc42-112-9-88-253.serveousercontent.com':location.origin;
-let backend=false,myCount=parseInt(localStorage.getItem('myStars')||'0'),localList=JSON.parse(localStorage.getItem('localPledges')||'[]');
-async function checkBackend(){try{var r=await fetch(API+'/api/stats',{signal:AbortSignal.timeout(1500)});if(r.ok){var d=await r.json();backend=true;document.getElementById('starCount').textContent=d.pledgeCount.toLocaleString();document.getElementById('bigNum').textContent=d.pledgeCount.toLocaleString();document.getElementById('connDot').className='dot on';updateI18n();return}}catch{}backend=false;document.getElementById('connDot').className='dot off';updateI18n()}
+window.API=isStatic?'https://b13bbbe963f0dc42-112-9-88-253.serveousercontent.com':location.origin;
+window.backend=false;var myCount=parseInt(localStorage.getItem('myStars')||'0'),localList=JSON.parse(localStorage.getItem('localPledges')||'[]');
+async function checkBackend(){try{var r=await fetch(window.API+'/api/stats',{signal:AbortSignal.timeout(1500)});if(r.ok){var d=await r.json();window.backend=true;document.getElementById('starCount').textContent=d.pledgeCount.toLocaleString();document.getElementById('bigNum').textContent=d.pledgeCount.toLocaleString();document.getElementById('connDot').className='dot on';updateI18n();return}}catch{}window.backend=false;document.getElementById('connDot').className='dot off';updateI18n()}
 checkBackend();setInterval(checkBackend,10000);
+</script>
 
-// THREE.js
+<script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent)||innerWidth<768;
 
@@ -210,7 +211,7 @@ function clearStars(){starMeshes.forEach(m=>starGroup.remove(m));glowSprites.for
 
 async function loadStars(){
   clearStars();var pledges=[];
-  if(backend){try{var r=await fetch(API+'/api/pledges?limit=200',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
+  if(window.backend){try{var r=await fetch(window.API+'/api/pledges?limit=200',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
   if(!pledges.length)pledges=localList.slice().reverse();
   pledges.forEach((p,i)=>addStar(p,i,pledges.length));
   document.getElementById('starCount').textContent=pledges.length.toLocaleString();
@@ -233,7 +234,7 @@ async function submit(){
   var input=document.getElementById('commitInput'),text=input.value.trim();
   if(!text){toast(_('submitEmpty'));return}
   var avatars=['🌟','💫','✨','🌱','💪','🕊️','🔥','🌊','💎','🦋','🌈'],pledge={text,avatar:avatars[Math.floor(Math.random()*avatars.length)],time:new Date().toISOString()};
-  if(backend){try{var r=await fetch(API+'/api/pledges',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledge.id=d.id}}catch{}}
+  if(window.backend){try{var r=await fetch(window.API+'/api/pledges',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledge.id=d.id}}catch{}}
   localList.push(pledge);myCount++;localStorage.setItem('localPledges',JSON.stringify(localList));localStorage.setItem('myStars',myCount.toString());
   input.value='';
   addStar(pledge,starMeshes.length,starMeshes.length+1);
@@ -251,7 +252,7 @@ let wallOpen=false;
 function toggleWall(){wallOpen=!wallOpen;document.getElementById('wall').classList.toggle('open',wallOpen);if(wallOpen)loadWall()}
 async function loadWall(){
   var list=document.getElementById('wallList'),pledges=[];
-  if(backend){try{var r=await fetch(API+'/api/pledges?limit=100',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
+  if(window.backend){try{var r=await fetch(window.API+'/api/pledges?limit=100',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
   if(!pledges.length)pledges=localList.slice().reverse();
   pledges.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   if(!pledges.length){list.innerHTML='<div class="wall-empty">🌊 '+_('wallEmpty')+'</div>';return}
