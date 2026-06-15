@@ -151,7 +151,7 @@ checkBackend();setInterval(checkBackend,10000);
 </script>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent)||innerWidth<768;
 
 // Renderer
@@ -249,8 +249,8 @@ document.getElementById('commitInput').addEventListener('keydown',e=>{if(e.key==
 
 // Wall
 let wallOpen=false;
-function toggleWall(){wallOpen=!wallOpen;document.getElementById('wall').classList.toggle('open',wallOpen);if(wallOpen)loadWall()}
-async function loadWall(){
+window.toggleWall=function(){wallOpen=!wallOpen;document.getElementById('wall').classList.toggle('open',wallOpen);if(wallOpen)loadWall()}
+window.loadWall=async function(){
   var list=document.getElementById('wallList'),pledges=[];
   if(window.backend){try{var r=await fetch(window.API+'/api/pledges?limit=100',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
   if(!pledges.length)pledges=localList.slice().reverse();
