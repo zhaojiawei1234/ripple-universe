@@ -597,6 +597,12 @@ body{background:#000;overflow:hidden;font-family:system-ui,-apple-system,'PingFa
 <script type="module">
 import * as THREE from 'three';
 
+// WebGL check
+if (!('WebGLRenderingContext' in window)) {
+  document.getElementById('loader').innerHTML = '<div class="loader-content"><div style="font-size:3rem;margin-bottom:1rem">📱</div><div style="color:#fff;font-size:1rem">您的设备不支持3D渲染</div><div style="color:#888;font-size:0.8rem;margin-top:0.5rem">请使用Chrome/Safari浏览器打开</div></div>';
+  throw new Error('WebGL not supported');
+}
+
 // Show loading progress
 const loadBar = document.getElementById('loadBar');
 let loadProgress = 0;
