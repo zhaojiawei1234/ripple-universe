@@ -1,0 +1,14 @@
+{
+  "name": "ripple-effect",
+  "version": "1.0.0",
+  "description": "涟漪效应 · The Ripple Effect — 后台管理系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "express": "^4.21.0",
+    "pngjs": "^7.0.0"
+  }
+}

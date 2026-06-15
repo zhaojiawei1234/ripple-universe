@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理 · 涟漪效应</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a26;
+    --text:#e0e0e8;--text2:#8888a0;--text3:#555568;
+    --accent:#00d2ff;--accent2:#6c5ce7;
+    --red:#ff4757;--green:#2ed573;--yellow:#ffd93d;
+    --border:rgba(255,255,255,0.06);
+    --radius:10px;
+    --font:systme-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+  a{color:var(--accent)}
+
+  /* Login */
+  #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .login-box{
+    background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+    padding:3rem 2rem;width:100%;max-width:380px;text-align:center;
+  }
+  .login-box h1{font-size:1.5rem;margin-bottom:0.5rem}
+  .login-box .sub{color:var(--text2);font-size:0.9rem;margin-bottom:2rem}
+  .login-box input{
+    width:100%;padding:0.9rem 1.2rem;border-radius:30px;
+    border:1px solid var(--border);background:var(--bg3);color:var(--text);
+    font-size:1rem;outline:none;text-align:center;
+    transition:border-color 0.3s;
+  }
+  .login-box input:focus{border-color:var(--accent)}
+  .login-box button{
+    width:100%;margin-top:1rem;padding:0.9rem;border-radius:30px;
+    border:none;background:linear-gradient(135deg,var(--accent2),var(--accent));
+    color:#fff;font-weight:700;font-size:1rem;cursor:pointer;
+    transition:all 0.3s;
+  }
+  .login-box button:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(0,210,255,0.2)}
+  .login-error{color:var(--red);font-size:0.85rem;margin-top:0.8rem;display:none}
+
+  /* Main layout */
+  #app{display:none}
+  #app.active{display:flex}
+  .sidebar{
+    width:240px;min-height:100vh;background:var(--bg2);
+    border-right:1px solid var(--border);padding:1.5rem;
+    display:flex;flex-direction:column;gap:0.3rem;
+    position:fixed;top:0;left:0;bottom:0;overflow-y:auto;
+  }
+  .sidebar .logo{font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;padding:0 0.8rem}
+  .sidebar .logo span{color:var(--accent)}
+  .sidebar a{
+    color:var(--text2);text-decoration:none;padding:0.7rem 0.8rem;
+    border-radius:8px;font-size:0.9rem;transition:all 0.2s;
+    display:flex;align-items:center;gap:0.6rem;
+  }
+  .sidebar a:hover,.sidebar a.active{background:var(--bg3);color:#fff}
+  .sidebar a .badge{background:var(--accent);color:#000;font-size:0.7rem;padding:0.1rem 0.5rem;border-radius:10px;font-weight:700;margin-left:auto}
+  .sidebar .logout-btn{margin-top:auto;color:var(--red)!important}
+  .main{
+    margin-left:240px;flex:1;padding:2rem;
+    max-width:calc(100vw - 240px);
+  }
+
+  /* Dashboard */
+  .page{display:none}
+  .page.active{display:block}
+  .page h2{font-size:1.5rem;margin-bottom:1.5rem;font-weight:700}
+  .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+  .stat-card{
+    background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.5rem;
+  }
+  .stat-card .val{font-size:2rem;font-weight:700;line-height:1.2}
+  .stat-card .lbl{font-size:0.85rem;color:var(--text2);margin-top:0.3rem}
+  .stat-card .sub{font-size:0.75rem;color:var(--text3);margin-top:0.3rem}
+  .chart-box{
+    background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.5rem;margin-bottom:1.5rem;
+  }
+  .chart-box h3{font-size:1rem;margin-bottom:1rem;font-weight:600}
+  .bar-chart{display:flex;align-items:flex-end;gap:0.5rem;height:180px;padding-top:1rem}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.3rem;height:100%;justify-content:flex-end}
+  .bar-col .bar{
+    width:100%;max-width:50px;border-radius:4px 4px 0 0;
+    background:linear-gradient(to top,var(--accent),var(--accent2));
+    transition:height 0.5s;min-height:2px;
+  }
+  .bar-col .bar-label{font-size:0.65rem;color:var(--text3)}
+  .bar-col .bar-val{font-size:0.7rem;font-weight:600;color:var(--text2)}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;font-size:0.9rem}
+  th,td{padding:0.8rem 0.6rem;text-align:left;border-bottom:1px solid var(--border)}
+  th{color:var(--text2);font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.03em}
+  td{color:var(--text)}
+  tr:hover td{background:rgba(255,255,255,0.01)}
+  .toolbar{display:flex;gap:0.8rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+  .toolbar input,.toolbar select{
+    padding:0.6rem 1rem;border-radius:20px;
+    border:1px solid var(--border);background:var(--bg3);color:var(--text);
+    font-size:0.85rem;outline:none;
+  }
+  .toolbar input:focus{border-color:var(--accent)}
+  .btn{
+    padding:0.5rem 1rem;border-radius:20px;border:1px solid var(--border);
+    background:var(--bg3);color:var(--text);font-size:0.85rem;
+    cursor:pointer;transition:all 0.2s;white-space:nowrap;
+  }
+  .btn:hover{border-color:rgba(255,255,255,0.2);background:var(--bg2)}
+  .btn.danger{color:var(--red);border-color:rgba(255,71,87,0.2)}
+  .btn.danger:hover{background:rgba(255,71,87,0.1)}
+  .btn.accent{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+  .btn.accent:hover{opacity:0.9}
+  .pagination{display:flex;gap:0.5rem;justify-content:center;margin-top:1.5rem}
+  .pagination button{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;transition:all 0.2s}
+  .pagination button:hover,.pagination button.active{background:var(--accent);color:#000;border-color:var(--accent)}
+  .pagination button:disabled{opacity:0.3;cursor:default}
+  .empty-state{text-align:center;padding:3rem;color:var(--text2)}
+  .tag{display:inline-block;padding:0.15rem 0.6rem;border-radius:10px;font-size:0.75rem;font-weight:600}
+  .tag.approved{background:rgba(46,213,115,0.15);color:var(--green)}
+  .tag.pending{background:rgba(255,217,61,0.15);color:var(--yellow)}
+  .tag.deleted{background:rgba(255,71,87,0.15);color:var(--red)}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:2rem;right:2rem;z-index:999;
+    background:var(--bg3);border:1px solid var(--accent);
+    color:#fff;padding:0.8rem 1.6rem;border-radius:30px;
+    font-size:0.9rem;pointer-events:none;
+    animation:toast-in 0.3s ease-out,toast-out 0.3s 2.5s ease-out forwards;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  }
+  @keyframes toast-in{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toast-out{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+
+  @media(max-width:768px){
+    .sidebar{width:100%;min-height:auto;position:static;flex-direction:row;flex-wrap:wrap;gap:0.5rem;padding:1rem;justify-content:center}
+    .sidebar .logo{width:100%;text-align:center;margin-bottom:0}
+    .sidebar .logout-btn{margin-top:0;margin-left:0}
+    .main{margin-left:0;max-width:100%}
+    .stat-cards{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>🌍 涟漪效应</h1>
+    <div class="sub">后台管理系统</div>
+    <input type="password" id="loginPassword" placeholder="请输入管理密码" autofocus>
+    <button onclick="login()">🔐 进入后台</button>
+    <div class="login-error" id="loginError">密码错误，请重试</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">🌍 涟漪效应<span>·后台</span></div>
+    <a href="#" data-page="dashboard" class="active">📊 数据总览</a>
+    <a href="#" data-page="pledges">💬 承诺管理 <span class="badge" id="pledgeBadge">-</span></a>
+    <a href="#" data-page="analytics">📈 数据分析</a>
+    <a href="#" data-page="settings">⚙️ 设置</a>
+    <a href="/" target="_blank">🔗 打开前台 →</a>
+    <a href="#" class="logout-btn" onclick="logout()">🚪 退出登录</a>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main">
+    <!-- Dashboard Page -->
+    <div class="page active" id="page-dashboard">
+      <h2>📊 数据总览</h2>
+      <div class="stat-cards" id="dashCards">
+        <div class="stat-card"><div class="val">--</div><div class="lbl">加载中...</div></div>
+      </div>
+      <div class="chart-box">
+        <h3>📅 近7天趋势</h3>
+        <div class="bar-chart" id="weeklyChart"><div style="color:var(--text2);padding:2rem">加载中...</div></div>
+      </div>
+      <div class="chart-box">
+        <h3>🔥 热门行动排行</h3>
+        <div id="topActionsList" style="color:var(--text2);padding:1rem 0">加载中...</div>
+      </div>
+    </div>
+
+    <!-- Pledges Page -->
+    <div class="page" id="page-pledges">
+      <h2>💬 承诺管理</h2>
+      <div class="toolbar">
+        <input type="text" id="pledgeSearch" placeholder="搜索承诺内容..." oninput="loadPledges(1)">
+        <select id="pledgeStatusFilter" onchange="loadPledges(1)">
+          <option value="active">正常</option>
+          <option value="deleted">已删除</option>
+          <option value="all">全部</option>
+        </select>
+        <button class="btn danger" onclick="batchDelete()" title="永久删除所有已标记删除的">🗑 清空回收站</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>头像</th><th>内容</th><th>时间</th><th>IP</th><th>状态</th><th>操作</th></tr>
+          </thead>
+          <tbody id="pledgesTableBody">
+            <tr><td colspan="7" class="empty-state">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pledgesPagination"></div>
+    </div>
+
+    <!-- Analytics Page -->
+    <div class="page" id="page-analytics">
+      <h2>📈 数据分析</h2>
+      <div class="stat-cards" id="analyticsCards"></div>
+      <div class="chart-box">
+        <h3>📅 近7天详细数据</h3>
+        <table>
+          <thead><tr><th>日期</th><th>页面浏览</th><th>涟漪点击</th><th>承诺提交</th></tr></thead>
+          <tbody id="weeklyDetailTable"><tr><td colspan="4" class="empty-state">加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page" id="page-settings">
+      <h2>⚙️ 设置</h2>
+      <div class="chart-box" style="max-width:500px">
+        <h3>🔐 修改管理密码</h3>
+        <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem">
+          当前密码通过环境变量 RIPPLE_ADMIN_PASSWORD 设置，默认值为 ripple2025。<br>
+          修改方法：重启服务器时设置环境变量，例如：
+        </p>
+        <code style="background:var(--bg3);padding:0.8rem;border-radius:8px;display:block;font-size:0.85rem;color:var(--accent)">
+          # Windows PowerShell:<br>
+          $env:RIPPLE_ADMIN_PASSWORD="你的新密码"; node server.js<br><br>
+          # Windows CMD:<br>
+          set RIPPLE_ADMIN_PASSWORD=你的新密码 && node server.js<br><br>
+          # Linux/Mac:<br>
+          RIPPLE_ADMIN_PASSWORD=你的新密码 node server.js
+        </code>
+      </div>
+      <div class="chart-box" style="max-width:500px;margin-top:1rem">
+        <h3>💡 系统信息</h3>
+        <table>
+          <tr><td style="color:var(--text2)">数据库引擎</td><td>SQLite (WAL模式)</td></tr>
+          <tr><td style="color:var(--text2)">数据存储位置</td><td><code>data/ripple.db</code></td></tr>
+          <tr><td style="color:var(--text2)">会话有效时长</td><td>24 小时</td></tr>
+          <tr><td style="color:var(--text2)">API 端点</td><td><code>/api/*</code></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ State ============
+let token = localStorage.getItem('ripple_admin_token');
+let currentPage = 'dashboard';
+let pledgePage = 1;
+
+// ============ API Helper ============
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(path, { ...opts, headers });
+  if (res.status === 401) {
+    logout();
+    throw new Error('未登录');
+  }
+  return res.json();
+}
+
+// ============ Auth ============
+async function login() {
+  const pw = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  try {
+    const data = await api('/api/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ password: pw })
+    });
+    if (data.success) {
+      token = data.token;
+      localStorage.setItem('ripple_admin_token', token);
+      showApp();
+    } else {
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = '登录失败: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('ripple_admin_token');
+  token = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('loginPassword').value = '';
+}
+
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+// ============ App Init ============
+async function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  await checkAuthAndInit();
+}
+
+async function checkAuthAndInit() {
+  if (!token) return;
+  try {
+    await api('/api/admin/check');
+    await loadDashboard();
+    loadPledges(1);
+    setupNavigation();
+  } catch {
+    // Token expired
+  }
+}
+
+// ============ Navigation ============
+function setupNavigation() {
+  document.querySelectorAll('.sidebar a[data-page]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const page = a.dataset.page;
+      switchPage(page);
+    });
+  });
+}
+
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.sidebar a[data-page]').forEach(a => a.classList.remove('active'));
+  document.querySelector(`.sidebar a[data-page="${page}"]`)?.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page)?.classList.add('active');
+
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'pledges') loadPledges(pledgePage);
+  if (page === 'analytics') loadAnalytics();
+}
+
+// ============ Dashboard ============
+async function loadDashboard() {
+  const data = await api('/api/admin/dashboard');
+
+  // Stat cards
+  document.getElementById('dashCards').innerHTML = `
+    <div class="stat-card">
+      <div class="val" style="color:var(--accent)">${data.pledgeCount.toLocaleString()}</div>
+      <div class="lbl">💬 总承诺数</div>
+      <div class="sub">今日 +${data.todayPledges}</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--accent2)">${data.rippleCount.toLocaleString()}</div>
+      <div class="lbl">🫧 总涟漪数</div>
+      <div class="sub">今日 +${data.todayRipples}</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--yellow)">${data.viewCount.toLocaleString()}</div>
+      <div class="lbl">👁 总浏览量</div>
+      <div class="sub">今日 +${data.todayViews}</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">${data.deletedPledgeCount.toLocaleString()}</div>
+      <div class="lbl">🗑 已删除</div>
+    </div>
+  `;
+
+  document.getElementById('pledgeBadge').textContent = data.pledgeCount.toLocaleString();
+
+  // Weekly chart
+  const maxVal = Math.max(...data.last7Days.map(d => Math.max(d.ripples, d.pledges, d.views)), 1);
+  document.getElementById('weeklyChart').innerHTML = data.last7Days.map(d => `
+    <div class="bar-col">
+      <div class="bar-val">${d.ripples + d.pledges}</div>
+      <div class="bar" style="height:${((d.ripples + d.pledges + d.views) / maxVal * 100).toFixed(0)}%"></div>
+      <div class="bar-label">${d.date.slice(5)}</div>
+    </div>
+  `).join('');
+
+  // Top actions
+  const actions = data.topActions || [];
+  document.getElementById('topActionsList').innerHTML = actions.length === 0
+    ? '<div style="color:var(--text2);padding:1rem 0">暂无数据</div>'
+    : actions.map((a, i) => `
+      <div style="display:flex;align-items:center;gap:0.8rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+        <span style="font-weight:700;color:var(--accent);min-width:24px">#${i+1}</span>
+        <span style="flex:1">${a.action_title}</span>
+        <span style="color:var(--text2)">${a.count} 次</span>
+      </div>
+    `).join('');
+}
+
+// ============ Pledges Management ============
+async function loadPledges(page) {
+  pledgePage = page;
+  const search = document.getElementById('pledgeSearch')?.value || '';
+  const status = document.getElementById('pledgeStatusFilter')?.value || 'active';
+
+  const params = new URLSearchParams({ page, limit: 30, status, search });
+  const data = await api('/api/admin/pledges?' + params);
+
+  const tbody = document.getElementById('pledgesTableBody');
+  if (data.pledges.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无数据</td></tr>';
+  } else {
+    tbody.innerHTML = data.pledges.map(p => `
+      <tr>
+        <td style="color:var(--text3)">#${p.id}</td>
+        <td style="font-size:1.5rem">${p.avatar}</td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(p.text)}">${escapeHtml(p.text)}</td>
+        <td style="color:var(--text2);font-size:0.8rem">${p.created_at?.replace('T',' ').slice(0,16) || '-'}</td>
+        <td style="color:var(--text3);font-size:0.75rem;max-width:100px;overflow:hidden;text-overflow:ellipsis">${p.ip || '-'}</td>
+        <td>
+          ${p.is_deleted ? '<span class="tag deleted">已删除</span>' :
+            p.is_approved ? '<span class="tag approved">已通过</span>' :
+            '<span class="tag pending">待审核</span>'}
+        </td>
+        <td style="white-space:nowrap">
+          ${!p.is_deleted ? `<button class="btn" onclick="toggleApprove(${p.id})" title="切换审核状态">${p.is_approved ? '⏸' : '✅'}</button>` : ''}
+          <button class="btn ${p.is_deleted ? '' : 'danger'}" onclick="toggleDelete(${p.id})">${p.is_deleted ? '↩ 恢复' : '🗑'}</button>
+          ${p.is_deleted ? `<button class="btn danger" onclick="permDelete(${p.id})">💣</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Pagination
+  const pg = document.getElementById('pledgesPagination');
+  let html = '';
+  for (let i = 1; i <= data.totalPages; i++) {
+    html += `<button class="${i === page ? 'active' : ''}" onclick="loadPledges(${i})" ${i === page ? 'disabled' : ''}>${i}</button>`;
+  }
+  pg.innerHTML = html;
+}
+
+async function toggleApprove(id) {
+  await api(`/api/admin/pledges/${id}/approve`, { method: 'PATCH' });
+  toast('✅ 审核状态已切换');
+  loadPledges(pledgePage);
+}
+
+async function toggleDelete(id) {
+  await api(`/api/admin/pledges/${id}/delete`, { method: 'PATCH' });
+  toast('🗑 操作完成');
+  loadPledges(pledgePage);
+}
+
+async function permDelete(id) {
+  if (!confirm('确定永久删除这条承诺？此操作不可恢复！')) return;
+  await api(`/api/admin/pledges/${id}`, { method: 'DELETE' });
+  toast('💣 已永久删除');
+  loadPledges(pledgePage);
+}
+
+async function batchDelete() {
+  if (!confirm('确定永久删除所有已标记为删除的承诺？此操作不可恢复！')) return;
+  // Get all deleted pledges and delete them
+  const data = await api('/api/admin/pledges?status=deleted&limit=200');
+  let count = 0;
+  for (const p of data.pledges) {
+    await api(`/api/admin/pledges/${p.id}`, { method: 'DELETE' });
+    count++;
+  }
+  toast(`💣 已永久删除 ${count} 条记录`);
+  loadPledges(1);
+}
+
+// ============ Analytics ============
+async function loadAnalytics() {
+  const data = await api('/api/admin/dashboard');
+
+  document.getElementById('analyticsCards').innerHTML = `
+    <div class="stat-card">
+      <div class="val" style="color:var(--yellow)">${data.viewCount.toLocaleString()}</div>
+      <div class="lbl">👁 总浏览</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--accent)">${data.pledgeCount.toLocaleString()}</div>
+      <div class="lbl">💬 总承诺</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--accent2)">${data.rippleCount.toLocaleString()}</div>
+      <div class="lbl">🫧 总涟漪</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">${(data.pledgeCount / Math.max(data.viewCount, 1) * 100).toFixed(1)}%</div>
+      <div class="lbl">📈 转化率</div>
+    </div>
+  `;
+
+  document.getElementById('weeklyDetailTable').innerHTML = data.last7Days.map(d => `
+    <tr>
+      <td>${d.date}</td>
+      <td>${d.views.toLocaleString()}</td>
+      <td>${d.ripples.toLocaleString()}</td>
+      <td>${d.pledges.toLocaleString()}</td>
+    </tr>
+  `).join('');
+}
+
+// ============ Helpers ============
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function toast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ============ Init ============
+if (token) {
+  checkAuthAndInit();
+}
+</script>
+</body>
+</html>

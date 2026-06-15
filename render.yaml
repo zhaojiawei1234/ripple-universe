@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ripple-universe
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PORT
+        value: "3000"
+    plan: free
