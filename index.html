@@ -142,12 +142,12 @@ function updateI18n(){
   document.querySelector('.stats.right .l').textContent=_('onlineLabel');
   document.getElementById('langSel').value=lang;
 }
-updateI18n();
-
-// Backend
+// Backend (declare BEFORE updateI18n which references backend)
 const isStatic=(/github\.io|lianyiyuzhou\.xyz/.test(location.hostname));
 const API=isStatic?'https://b13bbbe963f0dc42-112-9-88-253.serveousercontent.com':location.origin;
 let backend=false;var myCount=parseInt(localStorage.getItem('myStars')||'0'),localList=JSON.parse(localStorage.getItem('localPledges')||'[]');
+
+updateI18n();
 async function checkBackend(){try{var r=await fetch(API+'/api/stats',{signal:AbortSignal.timeout(1500)});if(r.ok){var d=await r.json();backend=true;document.getElementById('starCount').textContent=d.pledgeCount.toLocaleString();document.getElementById('bigNum').textContent=d.pledgeCount.toLocaleString();document.getElementById('connDot').className='dot on';updateI18n();return}}catch{}backend=false;document.getElementById('connDot').className='dot off';updateI18n()}
 checkBackend();setInterval(checkBackend,10000);
 const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent)||innerWidth<768;
