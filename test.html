@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><body style="background:#000;color:#0f0;font-family:monospace;padding:2rem">
+<div id="status">测试中...</div>
+<script type="module">
+var cdns = [
+  'https://esm.sh/three@0.160.0/build/three.module.js',
+  'https://cdn.skypack.dev/three@0.160.0',
+  'https://ga.jspm.io/npm:three@0.160.0/build/three.module.js',
+];
+async function tryCDN(i) {
+  if (i >= cdns.length) {
+    document.getElementById('status').textContent = '所有CDN都加载失败，Three.js被网络屏蔽';
+    return;
+  }
+  var url = cdns[i];
+  document.getElementById('status').textContent = '测试 ' + (i+1) + '/' + cdns.length + ': ' + url.substring(0,40) + '...';
+  try {
+    var m = await import(url);
+    document.getElementById('status').textContent = '成功! CDN ' + (i+1) + ' 可用: ' + url + '\nThree.js v' + m.REVISION;
+    try {
+      var c = document.createElement('canvas');
+      new m.WebGLRenderer({canvas:c});
+      document.getElementById('status').textContent += '\nWebGL OK!';
+    } catch(e) {
+      document.getElementById('status').textContent += '\nWebGL: ' + e.message;
+    }
+  } catch(e) {
+    document.getElementById('status').textContent += '\n失败: ' + e.message.substring(0,60);
+    tryCDN(i+1);
+  }
+}
+tryCDN(0);
+</script>
+</body></html>
