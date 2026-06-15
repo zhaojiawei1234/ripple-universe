@@ -3,11 +3,47 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const https = require('https');
 
 // ==================== Config ====================
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.RIPPLE_ADMIN_PASSWORD || 'admin123';
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+// ==================== IP Geo Lookup Cache ====================
+const geoCache = new Map();
+function geoLookup(ip) {
+  return new Promise((resolve) => {
+    const cleanIp = (ip || '').replace('::ffff:', '').replace('::1', '').split(',')[0].trim();
+    if (!cleanIp || cleanIp === '127.0.0.1' || cleanIp.startsWith('192.168.')) {
+      return resolve({ country:'本地', region:'内网', city:'', isp:'' });
+    }
+    if (geoCache.has(cleanIp)) return resolve(geoCache.get(cleanIp));
+
+    const req = https.get(`https://ipapi.co/${cleanIp}/json/`, { timeout: 3000 }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          const geo = {
+            country: j.country_name || '未知',
+            region: j.region || '',
+            city: j.city || '',
+            isp: j.org || '',
+            timezone: j.timezone || ''
+          };
+          geoCache.set(cleanIp, geo);
+          resolve(geo);
+        } catch { resolve({ country:'未知', region:'', city:'', isp:'' }); }
+      });
+    });
+    req.on('error', () => resolve({ country:'未知', region:'', city:'', isp:'' }));
+    req.setTimeout(3000, () => { req.destroy(); resolve({ country:'未知', region:'', city:'', isp:'' }); });
+  });
+}
+
+// ==================== Store Helpers ====================
 
 // ==================== JSON File Store ====================
 const STORE_PATH = path.join(__dirname, 'data', 'store.json');
@@ -185,8 +221,13 @@ app.post('/api/pledges', (req, res) => {
     is_approved: 1,
     is_deleted: 0
   };
-  store.pledges.push(pledge);
-  saveStore(store);
+
+  // Async geo lookup
+  geoLookup(req.ip).then(geo => {
+    pledge.geo = geo;
+    store.pledges.push(pledge);
+    saveStore(store);
+  });
 
   res.json({ success: true, id: pledge.id, avatar: pledge.avatar });
 });
@@ -383,6 +424,77 @@ app.get('/api/admin/dashboard', adminAuth, (req, res) => {
     todayRipples, todayPledges, todayViews,
     last7Days, topActions, latestPledges,
   });
+});
+
+// Admin: region breakdown
+app.get('/api/admin/analytics/regions', adminAuth, (req, res) => {
+  const store = loadStore();
+  const regionMap = {};
+  store.pledges.filter(p=>!p.is_deleted&&p.geo).forEach(p=>{
+    const key = p.geo.country + (p.geo.region?', '+p.geo.region:'');
+    if(!regionMap[key]) regionMap[key] = {country:p.geo.country,region:p.geo.region,city:p.geo.city,count:0};
+    regionMap[key].count++;
+  });
+  const regions = Object.values(regionMap).sort((a,b)=>b.count-a.count);
+  res.json(regions);
+});
+
+// Admin: hourly breakdown
+app.get('/api/admin/analytics/hourly', adminAuth, (req, res) => {
+  const store = loadStore();
+  const hourly = Array(24).fill(0).map((_,i) => ({hour:i,pledges:0,views:0,ripples:0}));
+  store.pledges.filter(p=>!p.is_deleted).forEach(p=>{
+    const h = new Date(p.created_at).getHours();
+    hourly[h].pledges++;
+  });
+  store.views.forEach(v=>{
+    const h = new Date(v.created_at).getHours();
+    hourly[h].views++;
+  });
+  store.ripples.forEach(r=>{
+    const h = new Date(r.created_at).getHours();
+    hourly[h].ripples++;
+  });
+  res.json(hourly);
+});
+
+// Admin: device stats
+app.get('/api/admin/analytics/devices', adminAuth, (req, res) => {
+  const store = loadStore();
+  const devices = {mobile:0,desktop:0,tablet:0,wechat:0,other:0};
+  const browsers = {};
+  const oss = {};
+  store.pledges.filter(p=>!p.is_deleted&&p.user_agent).forEach(p=>{
+    const ua = p.user_agent.toLowerCase();
+    if(ua.includes('micromessenger')) devices.wechat++;
+    else if(ua.includes('mobile')||ua.includes('android')||ua.includes('iphone')) devices.mobile++;
+    else if(ua.includes('tablet')||ua.includes('ipad')) devices.tablet++;
+    else devices.desktop++;
+
+    const uaLower = ua;
+    if(uaLower.includes('edg')) browsers['Edge']=(browsers['Edge']||0)+1;
+    else if(uaLower.includes('chrome')) browsers['Chrome']=(browsers['Chrome']||0)+1;
+    else if(uaLower.includes('safari')) browsers['Safari']=(browsers['Safari']||0)+1;
+    else if(uaLower.includes('firefox')) browsers['Firefox']=(browsers['Firefox']||0)+1;
+    else browsers['Other']=(browsers['Other']||0)+1;
+
+    if(uaLower.includes('windows')) oss['Windows']=(oss['Windows']||0)+1;
+    else if(uaLower.includes('android')) oss['Android']=(oss['Android']||0)+1;
+    else if(uaLower.includes('iphone')||uaLower.includes('ios')) oss['iOS']=(oss['iOS']||0)+1;
+    else if(uaLower.includes('mac')) oss['macOS']=(oss['macOS']||0)+1;
+    else oss['Other']=(oss['Other']||0)+1;
+  });
+  res.json({devices,browsers,oss});
+});
+
+// Admin: latest pledges with geo
+app.get('/api/admin/analytics/latest', adminAuth, (req, res) => {
+  const store = loadStore();
+  const latest = store.pledges
+    .filter(p=>!p.is_deleted)
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+    .slice(0, 50);
+  res.json(latest);
 });
 
 // ==================== Share Card Image Generator ====================

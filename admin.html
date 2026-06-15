@@ -3,537 +3,465 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>后台管理 · 涟漪效应</title>
+<title>涟漪宇宙 · 控制台</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a26;
-    --text:#e0e0e8;--text2:#8888a0;--text3:#555568;
-    --accent:#00d2ff;--accent2:#6c5ce7;
-    --red:#ff4757;--green:#2ed573;--yellow:#ffd93d;
-    --border:rgba(255,255,255,0.06);
-    --radius:10px;
-    --font:systme-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
-  }
-  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
-  a{color:var(--accent)}
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--panel:#0d0d0d;--border:#1a3a1a;
+  --green:#00ff41;--green2:#0dff00;--green3:#003b00;
+  --cyan:#00d2ff;--red:#ff3344;--yellow:#ffd700;--orange:#ff6b35;
+  --text:#b3ffb3;--text2:#4d884d;--text3:#1a331a;
+  --font:'Share Tech Mono','Courier New',monospace;
+  --glow:0 0 10px rgba(0,255,65,0.15);
+  --scanline:rgba(0,255,65,0.02);
+}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:#0a3a0a #0a0a0a}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a0a0a}::-webkit-scrollbar-thumb{background:#0a3a0a;border-radius:2px}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;line-height:1.5;-webkit-font-smoothing:none}
 
-  /* Login */
-  #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh}
-  .login-box{
-    background:var(--bg2);border:1px solid var(--border);border-radius:16px;
-    padding:3rem 2rem;width:100%;max-width:380px;text-align:center;
-  }
-  .login-box h1{font-size:1.5rem;margin-bottom:0.5rem}
-  .login-box .sub{color:var(--text2);font-size:0.9rem;margin-bottom:2rem}
-  .login-box input{
-    width:100%;padding:0.9rem 1.2rem;border-radius:30px;
-    border:1px solid var(--border);background:var(--bg3);color:var(--text);
-    font-size:1rem;outline:none;text-align:center;
-    transition:border-color 0.3s;
-  }
-  .login-box input:focus{border-color:var(--accent)}
-  .login-box button{
-    width:100%;margin-top:1rem;padding:0.9rem;border-radius:30px;
-    border:none;background:linear-gradient(135deg,var(--accent2),var(--accent));
-    color:#fff;font-weight:700;font-size:1rem;cursor:pointer;
-    transition:all 0.3s;
-  }
-  .login-box button:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(0,210,255,0.2)}
-  .login-error{color:var(--red);font-size:0.85rem;margin-top:0.8rem;display:none}
+/* Scanline overlay */
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px)}
 
-  /* Main layout */
-  #app{display:none}
-  #app.active{display:flex}
-  .sidebar{
-    width:240px;min-height:100vh;background:var(--bg2);
-    border-right:1px solid var(--border);padding:1.5rem;
-    display:flex;flex-direction:column;gap:0.3rem;
-    position:fixed;top:0;left:0;bottom:0;overflow-y:auto;
-  }
-  .sidebar .logo{font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;padding:0 0.8rem}
-  .sidebar .logo span{color:var(--accent)}
-  .sidebar a{
-    color:var(--text2);text-decoration:none;padding:0.7rem 0.8rem;
-    border-radius:8px;font-size:0.9rem;transition:all 0.2s;
-    display:flex;align-items:center;gap:0.6rem;
-  }
-  .sidebar a:hover,.sidebar a.active{background:var(--bg3);color:#fff}
-  .sidebar a .badge{background:var(--accent);color:#000;font-size:0.7rem;padding:0.1rem 0.5rem;border-radius:10px;font-weight:700;margin-left:auto}
-  .sidebar .logout-btn{margin-top:auto;color:var(--red)!important}
-  .main{
-    margin-left:240px;flex:1;padding:2rem;
-    max-width:calc(100vw - 240px);
-  }
+/* Matrix rain background */
+#matrixBg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:0.08;pointer-events:none}
 
-  /* Dashboard */
-  .page{display:none}
-  .page.active{display:block}
-  .page h2{font-size:1.5rem;margin-bottom:1.5rem;font-weight:700}
-  .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
-  .stat-card{
-    background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
-    padding:1.5rem;
-  }
-  .stat-card .val{font-size:2rem;font-weight:700;line-height:1.2}
-  .stat-card .lbl{font-size:0.85rem;color:var(--text2);margin-top:0.3rem}
-  .stat-card .sub{font-size:0.75rem;color:var(--text3);margin-top:0.3rem}
-  .chart-box{
-    background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
-    padding:1.5rem;margin-bottom:1.5rem;
-  }
-  .chart-box h3{font-size:1rem;margin-bottom:1rem;font-weight:600}
-  .bar-chart{display:flex;align-items:flex-end;gap:0.5rem;height:180px;padding-top:1rem}
-  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.3rem;height:100%;justify-content:flex-end}
-  .bar-col .bar{
-    width:100%;max-width:50px;border-radius:4px 4px 0 0;
-    background:linear-gradient(to top,var(--accent),var(--accent2));
-    transition:height 0.5s;min-height:2px;
-  }
-  .bar-col .bar-label{font-size:0.65rem;color:var(--text3)}
-  .bar-col .bar-val{font-size:0.7rem;font-weight:600;color:var(--text2)}
+/* Login */
+#loginScreen{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{
+  background:var(--panel);border:1px solid var(--border);padding:3rem 2.5rem;width:420px;
+  box-shadow:var(--glow),inset 0 0 60px rgba(0,255,65,0.02);
+  text-align:center;position:relative;
+}
+.login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.login-box h1{font-size:1.4rem;color:var(--green);margin-bottom:0.3rem;letter-spacing:0.1em}
+.login-box .sub{color:var(--text2);font-size:0.8rem;margin-bottom:2rem;letter-spacing:0.2em}
+.login-box input{
+  width:100%;padding:0.8rem 1rem;background:#000;border:1px solid var(--border);
+  color:var(--green);font-family:var(--font);font-size:0.9rem;text-align:center;
+  outline:none;transition:all 0.3s;
+}
+.login-box input:focus{border-color:var(--green);box-shadow:0 0 15px rgba(0,255,65,0.2)}
+.login-box input::placeholder{color:var(--text3)}
+.login-box button{
+  width:100%;margin-top:1rem;padding:0.8rem;background:transparent;
+  border:1px solid var(--green);color:var(--green);
+  font-family:var(--font);font-size:0.9rem;cursor:pointer;
+  transition:all 0.3s;letter-spacing:0.1em;
+}
+.login-box button:hover{background:rgba(0,255,65,0.1);box-shadow:0 0 25px rgba(0,255,65,0.3)}
+.login-error{color:var(--red);font-size:0.75rem;margin-top:0.8rem;display:none}
 
-  /* Table */
-  table{width:100%;border-collapse:collapse;font-size:0.9rem}
-  th,td{padding:0.8rem 0.6rem;text-align:left;border-bottom:1px solid var(--border)}
-  th{color:var(--text2);font-weight:600;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.03em}
-  td{color:var(--text)}
-  tr:hover td{background:rgba(255,255,255,0.01)}
-  .toolbar{display:flex;gap:0.8rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
-  .toolbar input,.toolbar select{
-    padding:0.6rem 1rem;border-radius:20px;
-    border:1px solid var(--border);background:var(--bg3);color:var(--text);
-    font-size:0.85rem;outline:none;
-  }
-  .toolbar input:focus{border-color:var(--accent)}
-  .btn{
-    padding:0.5rem 1rem;border-radius:20px;border:1px solid var(--border);
-    background:var(--bg3);color:var(--text);font-size:0.85rem;
-    cursor:pointer;transition:all 0.2s;white-space:nowrap;
-  }
-  .btn:hover{border-color:rgba(255,255,255,0.2);background:var(--bg2)}
-  .btn.danger{color:var(--red);border-color:rgba(255,71,87,0.2)}
-  .btn.danger:hover{background:rgba(255,71,87,0.1)}
-  .btn.accent{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
-  .btn.accent:hover{opacity:0.9}
-  .pagination{display:flex;gap:0.5rem;justify-content:center;margin-top:1.5rem}
-  .pagination button{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;transition:all 0.2s}
-  .pagination button:hover,.pagination button.active{background:var(--accent);color:#000;border-color:var(--accent)}
-  .pagination button:disabled{opacity:0.3;cursor:default}
-  .empty-state{text-align:center;padding:3rem;color:var(--text2)}
-  .tag{display:inline-block;padding:0.15rem 0.6rem;border-radius:10px;font-size:0.75rem;font-weight:600}
-  .tag.approved{background:rgba(46,213,115,0.15);color:var(--green)}
-  .tag.pending{background:rgba(255,217,61,0.15);color:var(--yellow)}
-  .tag.deleted{background:rgba(255,71,87,0.15);color:var(--red)}
+/* App layout */
+#app{display:none;position:relative;z-index:1}
+#app.active{display:flex}
+.sidebar{
+  width:220px;min-height:100vh;background:var(--panel);
+  border-right:1px solid var(--border);padding:1.2rem 0;
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;
+  z-index:10;gap:0.2rem;
+}
+.sidebar .logo{padding:0 1.2rem 1rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem}
+.sidebar .logo h2{font-size:1rem;color:var(--green);letter-spacing:0.08em}
+.sidebar .logo span{font-size:0.6rem;color:var(--text2);display:block}
+.sidebar a{
+  color:var(--text2);text-decoration:none;padding:0.6rem 1.2rem;font-size:0.78rem;
+  transition:all 0.2s;border-left:2px solid transparent;letter-spacing:0.04em;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.sidebar a:hover,.sidebar a.active{color:var(--green);background:rgba(0,255,65,0.03);border-left-color:var(--green)}
+.sidebar a .badge{background:var(--green);color:#000;font-size:0.6rem;padding:0.1rem 0.4rem;margin-left:auto;font-weight:700}
+.sidebar .logout{margin-top:auto;color:var(--red)!important;border-top:1px solid var(--border);padding-top:0.8rem}
+.main{margin-left:220px;flex:1;padding:1.5rem 2rem;max-width:calc(100vw - 220px)}
 
-  /* Toast */
-  .toast{
-    position:fixed;bottom:2rem;right:2rem;z-index:999;
-    background:var(--bg3);border:1px solid var(--accent);
-    color:#fff;padding:0.8rem 1.6rem;border-radius:30px;
-    font-size:0.9rem;pointer-events:none;
-    animation:toast-in 0.3s ease-out,toast-out 0.3s 2.5s ease-out forwards;
-    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  }
-  @keyframes toast-in{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes toast-out{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+/* Page */
+.page{display:none}
+.page.active{display:block}
+.page h3{font-size:0.9rem;color:var(--green);letter-spacing:0.1em;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+.page h3::before{content:'> ';color:var(--green)}
 
-  @media(max-width:768px){
-    .sidebar{width:100%;min-height:auto;position:static;flex-direction:row;flex-wrap:wrap;gap:0.5rem;padding:1rem;justify-content:center}
-    .sidebar .logo{width:100%;text-align:center;margin-bottom:0}
-    .sidebar .logout-btn{margin-top:0;margin-left:0}
-    .main{margin-left:0;max-width:100%}
-    .stat-cards{grid-template-columns:repeat(2,1fr)}
-  }
+/* Stat grid */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.8rem;margin-bottom:1.5rem}
+.stat-card{
+  background:var(--panel);border:1px solid var(--border);padding:1.2rem;
+  position:relative;overflow:hidden;
+}
+.stat-card .sc-label{font-size:0.65rem;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase}
+.stat-card .sc-value{font-size:1.8rem;color:var(--green);font-weight:700;margin-top:0.3rem}
+.stat-card .sc-sub{font-size:0.65rem;color:var(--text3);margin-top:0.2rem}
+.stat-card .sc-bar{height:2px;background:var(--text3);margin-top:0.5rem}
+.stat-card .sc-bar .sc-fill{height:100%;background:var(--green);transition:width 1s}
+
+/* Panel */
+.panel{
+  background:var(--panel);border:1px solid var(--border);
+  padding:1.2rem;margin-bottom:1rem;position:relative;
+}
+.panel h4{font-size:0.75rem;color:var(--green);letter-spacing:0.08em;margin-bottom:0.8rem}
+.panel h4::before{content:'# ';color:var(--text3)}
+
+/* Chart bar */
+.bar-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;font-size:0.7rem}
+.bar-row .bar-label{width:60px;text-align:right;color:var(--text2);flex-shrink:0}
+.bar-row .bar-track{flex:1;height:16px;background:var(--bg);border:1px solid var(--text3);position:relative}
+.bar-row .bar-fill{height:100%;background:var(--green);transition:width 0.6s;opacity:0.8}
+.bar-row .bar-val{width:40px;color:var(--green);flex-shrink:0;text-align:right}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.72rem}
+th,td{padding:0.5rem 0.6rem;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--green);font-size:0.65rem;letter-spacing:0.08em;white-space:nowrap}
+td{color:var(--text)}tr:hover td{background:rgba(0,255,65,0.02)}
+.tag{display:inline-block;padding:0.1rem 0.4rem;font-size:0.6rem;letter-spacing:0.05em}
+.tag.ok{background:rgba(0,255,65,0.1);color:var(--green)}
+.tag.warn{background:rgba(255,107,53,0.1);color:var(--orange)}
+.tag.bad{background:rgba(255,51,68,0.1);color:var(--red)}
+
+/* Toolbar */
+.toolbar{display:flex;gap:0.5rem;margin-bottom:0.8rem;flex-wrap:wrap}
+.toolbar input,.toolbar select{
+  padding:0.4rem 0.8rem;background:#000;border:1px solid var(--border);
+  color:var(--green);font-family:var(--font);font-size:0.7rem;outline:none;
+}
+.toolbar input:focus{border-color:var(--green)}
+.btn{
+  padding:0.35rem 0.8rem;background:transparent;border:1px solid var(--border);
+  color:var(--text2);font-family:var(--font);font-size:0.7rem;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.04em;
+}
+.btn:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,65,0.05)}
+.btn.danger{border-color:rgba(255,51,68,0.3);color:var(--red)}
+.btn.danger:hover{background:rgba(255,51,68,0.1)}
+.btn.accent{border-color:var(--green);color:var(--green)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+  background:var(--panel);border:1px solid var(--green);color:var(--green);
+  padding:0.6rem 1.5rem;font-size:0.75rem;font-family:var(--font);
+  letter-spacing:0.06em;pointer-events:none;
+  animation:toastIn 0.3s ease-out,toastOut 0.3s 2s ease-out forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+
+/* Map grid */
+.region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.5rem}
+.region-item{background:var(--panel);border:1px solid var(--border);padding:0.7rem;text-align:center}
+.region-item .ri-flag{font-size:1.4rem}
+.region-item .ri-name{font-size:0.7rem;color:var(--text2);margin-top:0.2rem}
+.region-item .ri-count{font-size:1.2rem;color:var(--green);font-weight:700}
+
+/* Live pulse dot */
+.pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:0.4rem;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,255,65,0.4)}50%{box-shadow:0 0 0 10px rgba(0,255,65,0)}}
+
+/* Terminal-style log */
+.log-line{font-size:0.68rem;color:var(--text2);font-family:var(--font);padding:0.2rem 0;border-bottom:1px solid rgba(0,255,65,0.03)}
+.log-line .time{color:var(--text3)}
+.log-line .ip{color:var(--orange)}
+.log-line .action{color:var(--green)}
+
+@media(max-width:768px){
+  .sidebar{width:100%;min-height:auto;position:static;flex-direction:row;flex-wrap:wrap;gap:0.3rem;padding:0.8rem;justify-content:center}
+  .sidebar .logo{width:100%;text-align:center}
+  .sidebar a{font-size:0.65rem;padding:0.3rem 0.6rem}
+  .main{margin-left:0;max-width:100%;padding:1rem}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .login-box{width:90%}
+}
 </style>
 </head>
 <body>
+<canvas id="matrixBg"></canvas>
 
-<!-- Login Screen -->
+<!-- Login -->
 <div id="loginScreen">
   <div class="login-box">
-    <h1>🌍 涟漪效应</h1>
-    <div class="sub">后台管理系统</div>
-    <input type="password" id="loginPassword" placeholder="请输入管理密码" autofocus>
-    <button onclick="login()">🔐 进入后台</button>
-    <div class="login-error" id="loginError">密码错误，请重试</div>
+    <h1>◈ 涟漪宇宙控制台</h1>
+    <div class="sub">RIPPLE_UNIVERSE://ADMIN</div>
+    <input type="password" id="loginPassword" placeholder="[ 输入访问密钥 ]" autofocus>
+    <button onclick="login()">▶ 建立连接</button>
+    <div class="login-error" id="loginError">连接被拒绝：密钥无效</div>
   </div>
 </div>
 
-<!-- Main App -->
+<!-- App -->
 <div id="app">
-  <!-- Sidebar -->
   <nav class="sidebar">
-    <div class="logo">🌍 涟漪效应<span>·后台</span></div>
-    <a href="#" data-page="dashboard" class="active">📊 数据总览</a>
-    <a href="#" data-page="pledges">💬 承诺管理 <span class="badge" id="pledgeBadge">-</span></a>
-    <a href="#" data-page="analytics">📈 数据分析</a>
-    <a href="#" data-page="settings">⚙️ 设置</a>
-    <a href="/" target="_blank">🔗 打开前台 →</a>
-    <a href="#" class="logout-btn" onclick="logout()">🚪 退出登录</a>
+    <div class="logo"><h2>RIPPLE://CTRL</h2><span>涟漪宇宙控制台 v2.0</span></div>
+    <a href="#" data-page="dash" class="active">◈ 系统总览</a>
+    <a href="#" data-page="pledges">◈ 数据管理 <span class="badge" id="pledgeBadge">-</span></a>
+    <a href="#" data-page="regions">◈ 地区分析</a>
+    <a href="#" data-page="devices">◈ 设备追踪</a>
+    <a href="#" data-page="realtime">◈ 实时监控</a>
+    <a href="/" target="_blank">◈ 返回前台 →</a>
+    <a href="#" onclick="logout()" class="logout">◈ 断开连接</a>
   </nav>
 
-  <!-- Main content -->
   <div class="main">
-    <!-- Dashboard Page -->
-    <div class="page active" id="page-dashboard">
-      <h2>📊 数据总览</h2>
-      <div class="stat-cards" id="dashCards">
-        <div class="stat-card"><div class="val">--</div><div class="lbl">加载中...</div></div>
-      </div>
-      <div class="chart-box">
-        <h3>📅 近7天趋势</h3>
-        <div class="bar-chart" id="weeklyChart"><div style="color:var(--text2);padding:2rem">加载中...</div></div>
-      </div>
-      <div class="chart-box">
-        <h3>🔥 热门行动排行</h3>
-        <div id="topActionsList" style="color:var(--text2);padding:1rem 0">加载中...</div>
-      </div>
+    <!-- Dashboard -->
+    <div class="page active" id="page-dash">
+      <h3>系统总览</h3>
+      <div class="stat-grid" id="dashStats"></div>
+      <div class="panel"><h4>24小时活动分布</h4><div id="hourlyChart"></div></div>
+      <div class="panel"><h4>最近提交记录</h4><div id="latestLog"></div></div>
     </div>
 
-    <!-- Pledges Page -->
+    <!-- Pledges -->
     <div class="page" id="page-pledges">
-      <h2>💬 承诺管理</h2>
+      <h3>数据管理</h3>
       <div class="toolbar">
-        <input type="text" id="pledgeSearch" placeholder="搜索承诺内容..." oninput="loadPledges(1)">
-        <select id="pledgeStatusFilter" onchange="loadPledges(1)">
-          <option value="active">正常</option>
-          <option value="deleted">已删除</option>
-          <option value="all">全部</option>
+        <input type="text" id="pledgeSearch" placeholder="过滤关键词..." oninput="loadPledges()">
+        <select id="pledgeStatus" onchange="loadPledges()">
+          <option value="active">活跃数据</option><option value="deleted">已删除</option><option value="all">全部</option>
         </select>
-        <button class="btn danger" onclick="batchDelete()" title="永久删除所有已标记删除的">🗑 清空回收站</button>
+        <button class="btn" onclick="loadPledges()">刷新</button>
+        <button class="btn danger" onclick="batchClean()">清空回收站</button>
       </div>
-      <div style="overflow-x:auto">
-        <table>
-          <thead>
-            <tr><th>ID</th><th>头像</th><th>内容</th><th>时间</th><th>IP</th><th>状态</th><th>操作</th></tr>
-          </thead>
-          <tbody id="pledgesTableBody">
-            <tr><td colspan="7" class="empty-state">加载中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination" id="pledgesPagination"></div>
+      <div class="table-wrap"><table><thead><tr><th>ID</th><th>位置</th><th>内容</th><th>时间</th><th>IP</th><th>设备</th><th>操作</th></tr></thead><tbody id="pledgeTable"></tbody></table></div>
     </div>
 
-    <!-- Analytics Page -->
-    <div class="page" id="page-analytics">
-      <h2>📈 数据分析</h2>
-      <div class="stat-cards" id="analyticsCards"></div>
-      <div class="chart-box">
-        <h3>📅 近7天详细数据</h3>
-        <table>
-          <thead><tr><th>日期</th><th>页面浏览</th><th>涟漪点击</th><th>承诺提交</th></tr></thead>
-          <tbody id="weeklyDetailTable"><tr><td colspan="4" class="empty-state">加载中...</td></tr></tbody>
-        </table>
-      </div>
+    <!-- Regions -->
+    <div class="page" id="page-regions">
+      <h3>地区分析</h3>
+      <div class="stat-grid" id="regionStats"></div>
+      <div class="region-grid" id="regionGrid"></div>
     </div>
 
-    <!-- Settings Page -->
-    <div class="page" id="page-settings">
-      <h2>⚙️ 设置</h2>
-      <div class="chart-box" style="max-width:500px">
-        <h3>🔐 修改管理密码</h3>
-        <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem">
-          当前密码通过环境变量 RIPPLE_ADMIN_PASSWORD 设置，默认值为 ripple2025。<br>
-          修改方法：重启服务器时设置环境变量，例如：
-        </p>
-        <code style="background:var(--bg3);padding:0.8rem;border-radius:8px;display:block;font-size:0.85rem;color:var(--accent)">
-          # Windows PowerShell:<br>
-          $env:RIPPLE_ADMIN_PASSWORD="你的新密码"; node server.js<br><br>
-          # Windows CMD:<br>
-          set RIPPLE_ADMIN_PASSWORD=你的新密码 && node server.js<br><br>
-          # Linux/Mac:<br>
-          RIPPLE_ADMIN_PASSWORD=你的新密码 node server.js
-        </code>
-      </div>
-      <div class="chart-box" style="max-width:500px;margin-top:1rem">
-        <h3>💡 系统信息</h3>
-        <table>
-          <tr><td style="color:var(--text2)">数据库引擎</td><td>SQLite (WAL模式)</td></tr>
-          <tr><td style="color:var(--text2)">数据存储位置</td><td><code>data/ripple.db</code></td></tr>
-          <tr><td style="color:var(--text2)">会话有效时长</td><td>24 小时</td></tr>
-          <tr><td style="color:var(--text2)">API 端点</td><td><code>/api/*</code></td></tr>
-        </table>
-      </div>
+    <!-- Devices -->
+    <div class="page" id="page-devices">
+      <h3>设备追踪</h3>
+      <div class="stat-grid" id="deviceStats"></div>
+      <div class="panel"><h4>设备类型分布</h4><div id="deviceChart"></div></div>
+      <div class="panel"><h4>浏览器分布</h4><div id="browserChart"></div></div>
+      <div class="panel"><h4>操作系统分布</h4><div id="osChart"></div></div>
+    </div>
+
+    <!-- Realtime -->
+    <div class="page" id="page-realtime">
+      <h3>实时监控</h3>
+      <div class="stat-grid" id="realtimeStats"></div>
+      <div class="panel"><h4>实时日志流</h4><div id="logStream" style="max-height:500px;overflow-y:auto"></div></div>
     </div>
   </div>
 </div>
 
 <script>
 // ============ State ============
-let token = localStorage.getItem('ripple_admin_token');
-let currentPage = 'dashboard';
-let pledgePage = 1;
+let token = localStorage.getItem('ripple_admin_token_v2');
+let currentPage = 'dash';
+let refreshTimer = null;
 
-// ============ API Helper ============
+// ============ API ============
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(path, { ...opts, headers });
-  if (res.status === 401) {
-    logout();
-    throw new Error('未登录');
-  }
+  if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
   return res.json();
 }
 
 // ============ Auth ============
 async function login() {
   const pw = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
   try {
-    const data = await api('/api/admin/login', {
-      method: 'POST',
-      body: JSON.stringify({ password: pw })
-    });
-    if (data.success) {
-      token = data.token;
-      localStorage.setItem('ripple_admin_token', token);
+    const d = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ password: pw }) });
+    if (d.success) {
+      token = d.token;
+      localStorage.setItem('ripple_admin_token_v2', token);
       showApp();
-    } else {
-      errEl.style.display = 'block';
     }
-  } catch (e) {
-    errEl.textContent = '登录失败: ' + e.message;
-    errEl.style.display = 'block';
-  }
+  } catch { document.getElementById('loginError').style.display = 'block'; }
 }
-
 function logout() {
-  localStorage.removeItem('ripple_admin_token');
-  token = null;
+  localStorage.removeItem('ripple_admin_token_v2'); token = null;
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').classList.remove('active');
-  document.getElementById('loginPassword').value = '';
+  clearInterval(refreshTimer);
 }
+document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
-document.getElementById('loginPassword').addEventListener('keydown', e => {
-  if (e.key === 'Enter') login();
-});
-
-// ============ App Init ============
-async function showApp() {
+// ============ App ============
+function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').classList.add('active');
-  await checkAuthAndInit();
+  setupNav();
+  loadDashboard();
+  refreshTimer = setInterval(() => { if (currentPage === 'dash') loadDashboard(); if (currentPage === 'realtime') loadRealtime(); }, 8000);
 }
 
-async function checkAuthAndInit() {
-  if (!token) return;
-  try {
-    await api('/api/admin/check');
-    await loadDashboard();
-    loadPledges(1);
-    setupNavigation();
-  } catch {
-    // Token expired
-  }
-}
-
-// ============ Navigation ============
-function setupNavigation() {
+function setupNav() {
   document.querySelectorAll('.sidebar a[data-page]').forEach(a => {
     a.addEventListener('click', e => {
       e.preventDefault();
-      const page = a.dataset.page;
-      switchPage(page);
+      currentPage = a.dataset.page;
+      document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
+      a.classList.add('active');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + currentPage).classList.add('active');
+      if (currentPage === 'dash') loadDashboard();
+      if (currentPage === 'pledges') loadPledges();
+      if (currentPage === 'regions') loadRegions();
+      if (currentPage === 'devices') loadDevices();
+      if (currentPage === 'realtime') loadRealtime();
     });
   });
 }
 
-function switchPage(page) {
-  currentPage = page;
-  document.querySelectorAll('.sidebar a[data-page]').forEach(a => a.classList.remove('active'));
-  document.querySelector(`.sidebar a[data-page="${page}"]`)?.classList.add('active');
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page)?.classList.add('active');
-
-  if (page === 'dashboard') loadDashboard();
-  if (page === 'pledges') loadPledges(pledgePage);
-  if (page === 'analytics') loadAnalytics();
-}
-
 // ============ Dashboard ============
 async function loadDashboard() {
-  const data = await api('/api/admin/dashboard');
-
-  // Stat cards
-  document.getElementById('dashCards').innerHTML = `
-    <div class="stat-card">
-      <div class="val" style="color:var(--accent)">${data.pledgeCount.toLocaleString()}</div>
-      <div class="lbl">💬 总承诺数</div>
-      <div class="sub">今日 +${data.todayPledges}</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color:var(--accent2)">${data.rippleCount.toLocaleString()}</div>
-      <div class="lbl">🫧 总涟漪数</div>
-      <div class="sub">今日 +${data.todayRipples}</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color:var(--yellow)">${data.viewCount.toLocaleString()}</div>
-      <div class="lbl">👁 总浏览量</div>
-      <div class="sub">今日 +${data.todayViews}</div>
-    </div>
-    <div class="stat-card">
-      <div class="val">${data.deletedPledgeCount.toLocaleString()}</div>
-      <div class="lbl">🗑 已删除</div>
-    </div>
+  const d = await api('/api/admin/dashboard');
+  const s = document.getElementById('dashStats');
+  const convRate = d.viewCount > 0 ? (d.pledgeCount / d.viewCount * 100).toFixed(1) : 0;
+  s.innerHTML = `
+    <div class="stat-card"><div class="sc-label">总承诺数</div><div class="sc-value">${d.pledgeCount.toLocaleString()}</div><div class="sc-sub">今日 +${d.todayPledges}</div><div class="sc-bar"><div class="sc-fill" style="width:100%"></div></div></div>
+    <div class="stat-card"><div class="sc-label">总浏览量</div><div class="sc-value">${d.viewCount.toLocaleString()}</div><div class="sc-sub">今日 +${d.todayViews}</div><div class="sc-bar"><div class="sc-fill" style="width:${Math.min(100,d.viewCount/100)}%"></div></div></div>
+    <div class="stat-card"><div class="sc-label">涟漪事件</div><div class="sc-value">${d.rippleCount.toLocaleString()}</div><div class="sc-sub">今日 +${d.todayRipples}</div><div class="sc-bar"><div class="sc-fill" style="width:${Math.min(100,d.rippleCount/10)}%"></div></div></div>
+    <div class="stat-card"><div class="sc-label">转化率</div><div class="sc-value">${convRate}%</div><div class="sc-sub">浏览→承诺</div><div class="sc-bar"><div class="sc-fill" style="width:${Math.min(100,convRate*2)}%"></div></div></div>
+    <div class="stat-card"><div class="sc-label">在线探索者</div><div class="sc-value"><span class="pulse-dot"></span>实时</div><div class="sc-sub">心跳检测中</div></div>
+    <div class="stat-card"><div class="sc-label">数据节点</div><div class="sc-value">${d.deletedPledgeCount}</div><div class="sc-sub">已删除记录</div></div>
   `;
+  document.getElementById('pledgeBadge').textContent = d.pledgeCount;
 
-  document.getElementById('pledgeBadge').textContent = data.pledgeCount.toLocaleString();
+  // Hourly chart
+  const hData = await api('/api/admin/analytics/hourly');
+  const maxH = Math.max(...hData.map(h=>h.pledges+h.views), 1);
+  document.getElementById('hourlyChart').innerHTML = hData.map(h=>`
+    <div class="bar-row">
+      <div class="bar-label">${String(h.hour).padStart(2,'0')}:00</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${((h.pledges+h.views)/maxH*100).toFixed(0)}%"></div></div>
+      <div class="bar-val">${h.pledges+h.views}</div>
+    </div>`).join('');
 
-  // Weekly chart
-  const maxVal = Math.max(...data.last7Days.map(d => Math.max(d.ripples, d.pledges, d.views)), 1);
-  document.getElementById('weeklyChart').innerHTML = data.last7Days.map(d => `
-    <div class="bar-col">
-      <div class="bar-val">${d.ripples + d.pledges}</div>
-      <div class="bar" style="height:${((d.ripples + d.pledges + d.views) / maxVal * 100).toFixed(0)}%"></div>
-      <div class="bar-label">${d.date.slice(5)}</div>
-    </div>
-  `).join('');
-
-  // Top actions
-  const actions = data.topActions || [];
-  document.getElementById('topActionsList').innerHTML = actions.length === 0
-    ? '<div style="color:var(--text2);padding:1rem 0">暂无数据</div>'
-    : actions.map((a, i) => `
-      <div style="display:flex;align-items:center;gap:0.8rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-        <span style="font-weight:700;color:var(--accent);min-width:24px">#${i+1}</span>
-        <span style="flex:1">${a.action_title}</span>
-        <span style="color:var(--text2)">${a.count} 次</span>
-      </div>
-    `).join('');
+  // Latest log
+  const latest = await api('/api/admin/analytics/latest');
+  document.getElementById('latestLog').innerHTML = latest.slice(0, 15).map(p => `
+    <div class="log-line">
+      <span class="time">[${(p.created_at||'').replace('T',' ').slice(0,16)}]</span>
+      <span class="action">PLEDGE #${p.id}</span>
+      <span>${esc(p.text).substring(0,40)}</span>
+      <span class="ip">[${(p.geo?.country||'?')}]</span>
+    </div>`).join('');
 }
 
-// ============ Pledges Management ============
-async function loadPledges(page) {
-  pledgePage = page;
-  const search = document.getElementById('pledgeSearch')?.value || '';
-  const status = document.getElementById('pledgeStatusFilter')?.value || 'active';
-
-  const params = new URLSearchParams({ page, limit: 30, status, search });
-  const data = await api('/api/admin/pledges?' + params);
-
-  const tbody = document.getElementById('pledgesTableBody');
-  if (data.pledges.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无数据</td></tr>';
-  } else {
-    tbody.innerHTML = data.pledges.map(p => `
-      <tr>
-        <td style="color:var(--text3)">#${p.id}</td>
-        <td style="font-size:1.5rem">${p.avatar}</td>
-        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(p.text)}">${escapeHtml(p.text)}</td>
-        <td style="color:var(--text2);font-size:0.8rem">${p.created_at?.replace('T',' ').slice(0,16) || '-'}</td>
-        <td style="color:var(--text3);font-size:0.75rem;max-width:100px;overflow:hidden;text-overflow:ellipsis">${p.ip || '-'}</td>
-        <td>
-          ${p.is_deleted ? '<span class="tag deleted">已删除</span>' :
-            p.is_approved ? '<span class="tag approved">已通过</span>' :
-            '<span class="tag pending">待审核</span>'}
-        </td>
-        <td style="white-space:nowrap">
-          ${!p.is_deleted ? `<button class="btn" onclick="toggleApprove(${p.id})" title="切换审核状态">${p.is_approved ? '⏸' : '✅'}</button>` : ''}
-          <button class="btn ${p.is_deleted ? '' : 'danger'}" onclick="toggleDelete(${p.id})">${p.is_deleted ? '↩ 恢复' : '🗑'}</button>
-          ${p.is_deleted ? `<button class="btn danger" onclick="permDelete(${p.id})">💣</button>` : ''}
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Pagination
-  const pg = document.getElementById('pledgesPagination');
-  let html = '';
-  for (let i = 1; i <= data.totalPages; i++) {
-    html += `<button class="${i === page ? 'active' : ''}" onclick="loadPledges(${i})" ${i === page ? 'disabled' : ''}>${i}</button>`;
-  }
-  pg.innerHTML = html;
-}
-
-async function toggleApprove(id) {
-  await api(`/api/admin/pledges/${id}/approve`, { method: 'PATCH' });
-  toast('✅ 审核状态已切换');
-  loadPledges(pledgePage);
-}
-
-async function toggleDelete(id) {
-  await api(`/api/admin/pledges/${id}/delete`, { method: 'PATCH' });
-  toast('🗑 操作完成');
-  loadPledges(pledgePage);
-}
-
-async function permDelete(id) {
-  if (!confirm('确定永久删除这条承诺？此操作不可恢复！')) return;
-  await api(`/api/admin/pledges/${id}`, { method: 'DELETE' });
-  toast('💣 已永久删除');
-  loadPledges(pledgePage);
-}
-
-async function batchDelete() {
-  if (!confirm('确定永久删除所有已标记为删除的承诺？此操作不可恢复！')) return;
-  // Get all deleted pledges and delete them
-  const data = await api('/api/admin/pledges?status=deleted&limit=200');
-  let count = 0;
-  for (const p of data.pledges) {
-    await api(`/api/admin/pledges/${p.id}`, { method: 'DELETE' });
-    count++;
-  }
-  toast(`💣 已永久删除 ${count} 条记录`);
-  loadPledges(1);
-}
-
-// ============ Analytics ============
-async function loadAnalytics() {
-  const data = await api('/api/admin/dashboard');
-
-  document.getElementById('analyticsCards').innerHTML = `
-    <div class="stat-card">
-      <div class="val" style="color:var(--yellow)">${data.viewCount.toLocaleString()}</div>
-      <div class="lbl">👁 总浏览</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color:var(--accent)">${data.pledgeCount.toLocaleString()}</div>
-      <div class="lbl">💬 总承诺</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color:var(--accent2)">${data.rippleCount.toLocaleString()}</div>
-      <div class="lbl">🫧 总涟漪</div>
-    </div>
-    <div class="stat-card">
-      <div class="val">${(data.pledgeCount / Math.max(data.viewCount, 1) * 100).toFixed(1)}%</div>
-      <div class="lbl">📈 转化率</div>
-    </div>
-  `;
-
-  document.getElementById('weeklyDetailTable').innerHTML = data.last7Days.map(d => `
+// ============ Pledges ============
+async function loadPledges() {
+  const s = document.getElementById('pledgeSearch').value;
+  const status = document.getElementById('pledgeStatus').value;
+  const d = await api(`/api/admin/pledges?limit=50&search=${s}&status=${status}`);
+  document.getElementById('pledgeTable').innerHTML = d.pledges.map(p => `
     <tr>
-      <td>${d.date}</td>
-      <td>${d.views.toLocaleString()}</td>
-      <td>${d.ripples.toLocaleString()}</td>
-      <td>${d.pledges.toLocaleString()}</td>
-    </tr>
-  `).join('');
+      <td style="color:var(--text3)">#${p.id}</td>
+      <td style="color:var(--orange)">${p.geo?.country||'?'} ${p.geo?.city||''}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(p.text)}">${esc(p.text)}</td>
+      <td style="color:var(--text3);white-space:nowrap">${(p.created_at||'').replace('T',' ').slice(0,16)}</td>
+      <td style="color:var(--text3);font-size:0.65rem">${(p.ip||'').replace('::ffff:','').substring(0,12)}</td>
+      <td>${p.user_agent?.includes('MicroMessenger')?'<span class="tag warn">微信</span>':p.user_agent?.includes('Mobile')?'<span class="tag ok">手机</span>':'<span class="tag">桌面</span>'}</td>
+      <td style="white-space:nowrap">
+        ${!p.is_deleted ? `<button class="btn" onclick="toggleApprove(${p.id})">${p.is_approved?'⏸':'✅'}</button><button class="btn danger" onclick="toggleDelete(${p.id})">🗑</button>` : `<button class="btn" onclick="toggleDelete(${p.id})">↩</button><button class="btn danger" onclick="permDelete(${p.id})">💣</button>`}
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem">[ 无匹配数据 ]</td></tr>';
+}
+
+async function toggleApprove(id) { await api(`/api/admin/pledges/${id}/approve`, { method: 'PATCH' }); loadPledges(); toast('状态已切换'); }
+async function toggleDelete(id) { await api(`/api/admin/pledges/${id}/delete`, { method: 'PATCH' }); loadPledges(); toast('操作完成'); }
+async function permDelete(id) { if (!confirm('永久删除？不可恢复！')) return; await api(`/api/admin/pledges/${id}`, { method: 'DELETE' }); loadPledges(); toast('已永久删除'); }
+async function batchClean() {
+  const d = await api('/api/admin/pledges?status=deleted&limit=200');
+  if (!d.pledges.length) { toast('回收站已空'); return; }
+  if (!confirm(`永久删除 ${d.pledges.length} 条？`)) return;
+  for (const p of d.pledges) await api(`/api/admin/pledges/${p.id}`, { method: 'DELETE' });
+  loadPledges(); toast(`已清除 ${d.pledges.length} 条`);
+}
+
+// ============ Regions ============
+async function loadRegions() {
+  const d = await api('/api/admin/analytics/regions');
+  const total = d.reduce((s,r)=>s+r.count, 0);
+  document.getElementById('regionStats').innerHTML = `
+    <div class="stat-card"><div class="sc-label">覆盖国家/地区</div><div class="sc-value">${d.length}</div></div>
+    <div class="stat-card"><div class="sc-label">最活跃地区</div><div class="sc-value">${d[0]?.country||'-'}</div><div class="sc-sub">${d[0]?.count||0} 条留言</div></div>
+  `;
+  document.getElementById('regionGrid').innerHTML = d.map(r => `
+    <div class="region-item">
+      <div class="ri-flag">${flagEmoji(r.country)}</div>
+      <div class="ri-count">${r.count}</div>
+      <div class="ri-name">${r.country} ${r.region||''}</div>
+    </div>`).join('') || '<div style="color:var(--text3)">[ 暂无地区数据 ]</div>';
+}
+function flagEmoji(country) {
+  const m = { '中国':'🇨🇳','美国':'🇺🇸','日本':'🇯🇵','韩国':'🇰🇷','英国':'🇬🇧','法国':'🇫🇷','德国':'🇩🇪','加拿大':'🇨🇦','澳大利亚':'🇦🇺','巴西':'🇧🇷','印度':'🇮🇳','俄罗斯':'🇷🇺','新加坡':'🇸🇬','马来西亚':'🇲🇾','泰国':'🇹🇭','越南':'🇻🇳','印尼':'🇮🇩','菲律宾':'🇵🇭','意大利':'🇮🇹','西班牙':'🇪🇸','荷兰':'🇳🇱','瑞典':'🇸🇪','瑞士':'🇨🇭','阿联酋':'🇦🇪','沙特':'🇸🇦','本地':'🏠','未知':'🌐' };
+  return m[country] || '🌍';
+}
+
+// ============ Devices ============
+async function loadDevices() {
+  const d = await api('/api/admin/analytics/devices');
+  document.getElementById('deviceStats').innerHTML = `
+    <div class="stat-card"><div class="sc-label">桌面端</div><div class="sc-value">${d.devices.desktop||0}</div></div>
+    <div class="stat-card"><div class="sc-label">移动端</div><div class="sc-value">${d.devices.mobile||0}</div></div>
+    <div class="stat-card"><div class="sc-label">微信内</div><div class="sc-value">${d.devices.wechat||0}</div></div>
+    <div class="stat-card"><div class="sc-label">平板</div><div class="sc-value">${d.devices.tablet||0}</div></div>
+  `;
+  const maxD = Math.max(...Object.values(d.devices), 1);
+  document.getElementById('deviceChart').innerHTML = Object.entries(d.devices).map(([k,v])=>`<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxD*100).toFixed(0)}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  const maxB = Math.max(...Object.values(d.browsers), 1);
+  document.getElementById('browserChart').innerHTML = Object.entries(d.browsers).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxB*100).toFixed(0)}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  const maxO = Math.max(...Object.values(d.oss), 1);
+  document.getElementById('osChart').innerHTML = Object.entries(d.oss).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxO*100).toFixed(0)}%"></div></div><div class="bar-val">${v}</div></div>`).join('');
+}
+
+// ============ Realtime ============
+async function loadRealtime() {
+  const d = await api('/api/admin/dashboard');
+  const latest = await api('/api/admin/analytics/latest');
+  document.getElementById('realtimeStats').innerHTML = `
+    <div class="stat-card"><div class="sc-label"><span class="pulse-dot"></span>系统状态</div><div class="sc-value" style="color:#0f0">在线</div></div>
+    <div class="stat-card"><div class="sc-label">今日提交</div><div class="sc-value">${d.todayPledges}</div></div>
+    <div class="stat-card"><div class="sc-label">今日浏览</div><div class="sc-value">${d.todayViews}</div></div>
+    <div class="stat-card"><div class="sc-label">总数据量</div><div class="sc-value">${d.pledgeCount}</div></div>
+  `;
+  document.getElementById('logStream').innerHTML = latest.map(p => `
+    <div class="log-line">
+      <span class="time">[${(p.created_at||'').slice(11,19)}]</span>
+      <span class="action">${p.geo?.country||'?'}/${p.geo?.city||'?'}</span>
+      <span>${esc(p.text).substring(0,50)}</span>
+      <span class="ip">[${(p.user_agent||'').includes('MicroMessenger')?'微信':(p.user_agent||'').includes('Mobile')?'手机':'桌面'}]</span>
+    </div>`).join('');
 }
 
 // ============ Helpers ============
-function escapeHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function toast(m) {
+  const old = document.querySelector('.toast'); if (old) old.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = m;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
 }
 
-function toast(msg) {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
-}
+// ============ Matrix BG ============
+(function() {
+  const c = document.getElementById('matrixBg'), ctx = c.getContext('2d');
+  let w, h, drops = [];
+  function rs() { w = c.width = innerWidth; h = c.height = innerHeight; drops = Array(Math.floor(w/14)).fill(0).map(() => Math.random()*h); }
+  rs(); addEventListener('resize', rs);
+  const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+  function draw() {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#0f0'; ctx.font = '12px monospace';
+    drops.forEach((y,i) => {
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)], i*14, y);
+      drops[i] = y > h + 20 ? 0 : y + 14;
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
 
 // ============ Init ============
 if (token) {
-  checkAuthAndInit();
+  api('/api/admin/check').then(() => showApp()).catch(() => logout());
 }
 </script>
 </body>
