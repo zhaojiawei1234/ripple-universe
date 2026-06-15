@@ -676,6 +676,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2('#020210', 0.00025);
 const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 1, 1000);
 camera.position.set(0, 0, 30);
 
@@ -767,6 +768,101 @@ const bgStarsMat = new THREE.PointsMaterial({
 const bgStars = new THREE.Points(bgStarsGeo, bgStarsMat);
 scene.add(bgStars);
 
+// ==================== NEBULA CLOUDS ====================
+function createNebula(color, pos, size, count) {
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i*3] = (Math.random()-0.5)*size*2 + pos.x;
+    positions[i*3+1] = (Math.random()-0.5)*size*2 + pos.y;
+    positions[i*3+2] = (Math.random()-0.5)*size*2 + pos.z;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.25, color, blending: THREE.AdditiveBlending,
+    depthWrite: false, transparent: true, opacity: 0.15,
+  });
+  const nebula = new THREE.Points(geo, mat);
+  scene.add(nebula);
+  return nebula;
+}
+// Create colorful nebulae around the scene
+const nebulae = [
+  createNebula(0x6c5ce7, new THREE.Vector3(15, 5, -10), 8, 400),
+  createNebula(0x00d2ff, new THREE.Vector3(-12, -3, 8), 7, 350),
+  createNebula(0xff6b9d, new THREE.Vector3(5, -8, -12), 6, 300),
+  createNebula(0x2ed573, new THREE.Vector3(-8, 6, 15), 7, 350),
+];
+
+// ==================== ENERGY STREAMS (from orb) ====================
+const streamGroup = new THREE.Group();
+orb.add(streamGroup);
+const streamLines = [];
+function createStreamLine() {
+  const points = [];
+  const segments = 30;
+  const maxDist = 4 + Math.random() * 5;
+  const angle = Math.random() * Math.PI * 2;
+  const tilt = (Math.random() - 0.5) * Math.PI;
+  for (let i = 0; i < segments; i++) {
+    const t = i / segments;
+    const dist = t * maxDist;
+    const wobble = Math.sin(t * 8) * 0.3 * (1 - t);
+    points.push(new THREE.Vector3(
+      Math.cos(angle) * Math.cos(tilt) * dist + wobble,
+      Math.sin(tilt) * dist + Math.cos(t * 6) * 0.2,
+      Math.sin(angle) * Math.cos(tilt) * dist + Math.sin(t * 5) * 0.2
+    ));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({
+    color: new THREE.Color().setHSL(0.55 + Math.random() * 0.15, 0.8, 0.6),
+    transparent: true, opacity: 0.4, depthWrite: false,
+  });
+  const line = new THREE.Line(geo, mat);
+  line.userData = { age: 0, maxAge: 2 + Math.random() * 3, speed: 0.3 + Math.random() * 0.5 };
+  streamGroup.add(line);
+  return line;
+}
+// Keep active streams
+function maintainStreams() {
+  if (streamGroup.children.length < 8 && Math.random() < 0.3) {
+    streamLines.push(createStreamLine());
+  }
+}
+
+// ==================== CONSTELLATION LINES ====================
+const constellationGroup = new THREE.Group();
+scene.add(constellationGroup);
+let constellationLines = [];
+
+function updateConstellations() {
+  // Remove old lines
+  constellationLines.forEach(l => constellationGroup.remove(l));
+  constellationLines = [];
+
+  // Draw lines between nearby stars
+  const maxDist = 5;
+  for (let i = 0; i < commitStarMeshes.length; i++) {
+    for (let j = i + 1; j < commitStarMeshes.length; j++) {
+      const a = commitStarMeshes[i].position;
+      const b = commitStarMeshes[j].position;
+      const dist = a.distanceTo(b);
+      if (dist < maxDist) {
+        const points = [a.clone(), b.clone()];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const opacity = (1 - dist / maxDist) * 0.15;
+        const mat = new THREE.LineBasicMaterial({
+          color: 0x4488aa, transparent: true, opacity,
+          depthWrite: false,
+        });
+        constellationLines.push(new THREE.Line(geo, mat));
+        constellationGroup.add(constellationLines[constellationLines.length - 1]);
+      }
+    }
+  }
+}
+
 // ==================== COMMITMENT STARS (real data) ====================
 const commitStarsGroup = new THREE.Group();
 scene.add(commitStarsGroup);
@@ -791,6 +887,16 @@ function createCommitStar(pledge, index){
   mesh.userData = {pledge, col, basePos:new THREE.Vector3(x,y,z), phase:Math.random()*Math.PI*2, speed:0.3+Math.random()*0.7};
   mesh.scale.setScalar(0.8+Math.random()*1.2);
   commitStarsGroup.add(mesh);
+  // Add tiny glow sprite
+  const miniGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: (()=>{const c=document.createElement('canvas');c.width=16;c.height=16;const ctx=c.getContext('2d');const g=ctx.createRadialGradient(8,8,0,8,8,8);g.addColorStop(0,'rgba(255,255,255,0.6)');g.addColorStop(0.5,'rgba(0,210,255,0.2)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,16,16);return new THREE.CanvasTexture(c)})(),
+    blending: THREE.AdditiveBlending, depthWrite: false, transparent: true,
+  }));
+  miniGlow.scale.set(1.5, 1.5, 1);
+  miniGlow.position.copy(mesh.position);
+  miniGlow.userData = { parentStar: mesh };
+  commitStarsGroup.add(miniGlow);
+  mesh.userData._glowSprite = miniGlow;
   commitStarMeshes.push(mesh);
   return mesh;
 }
@@ -1148,8 +1254,33 @@ function animate(t){
   bgStars.rotation.y+=dt*0.03;
   bgStars.rotation.x+=dt*0.01;
 
+  // Rotate nebulae gently
+  nebulae.forEach((n,i)=>{n.rotation.y+=dt*(0.02+i*0.01);n.rotation.x+=dt*0.01;});
+
   // Rotate commitment stars
   commitStarsGroup.rotation.y+=dt*0.05;
+
+  // Maintain energy streams
+  maintainStreams();
+  // Update stream lines
+  for (let i = streamLines.length - 1; i >= 0; i--) {
+    const s = streamLines[i];
+    s.userData.age += dt;
+    s.material.opacity = Math.max(0, 0.4 * (1 - s.userData.age / s.userData.maxAge));
+    if (s.userData.age > s.userData.maxAge) {
+      streamGroup.remove(s);
+      streamLines.splice(i, 1);
+    }
+  }
+
+  // Update constellations
+  constelUpdateCounter = (constelUpdateCounter || 0) + dt;
+  if (constelUpdateCounter > 3) { constelUpdateCounter = 0; updateConstellations(); }
+
+  // Auto-pilot camera drift (gentle slow rotation when not being dragged)
+  if (!isDragging) {
+    targetTheta += dt * 0.08;
+  }
 
   // Animate commitment star meshes
   commitStarMeshes.forEach(m=>{
