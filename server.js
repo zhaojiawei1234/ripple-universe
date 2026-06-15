@@ -6,7 +6,7 @@ const crypto = require('crypto');
 
 // ==================== Config ====================
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.RIPPLE_ADMIN_PASSWORD || 'zhaojiawei123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.RIPPLE_ADMIN_PASSWORD || 'admin123';
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 // ==================== JSON File Store ====================
