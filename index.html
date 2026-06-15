@@ -869,6 +869,16 @@ scene.add(commitStarsGroup);
 const starGeo = new THREE.SphereGeometry(0.15, 8, 8);
 let commitStarMeshes = [];
 
+// Pre-create glow texture (shared by all stars)
+const sharedGlowTex = (()=>{
+  const c=document.createElement('canvas');c.width=16;c.height=16;
+  const ctx=c.getContext('2d');
+  const g=ctx.createRadialGradient(8,8,0,8,8,8);
+  g.addColorStop(0,'rgba(255,255,255,0.7)');g.addColorStop(0.4,'rgba(0,210,255,0.3)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,16,16);
+  return new THREE.CanvasTexture(c);
+})();
+
 function createCommitStar(pledge, index){
   // Place on a Fibonacci sphere for even distribution
   const total = Math.max(commitStarMeshes.length + 1, 1);
@@ -889,8 +899,8 @@ function createCommitStar(pledge, index){
   commitStarsGroup.add(mesh);
   // Add tiny glow sprite
   const miniGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: (()=>{const c=document.createElement('canvas');c.width=16;c.height=16;const ctx=c.getContext('2d');const g=ctx.createRadialGradient(8,8,0,8,8,8);g.addColorStop(0,'rgba(255,255,255,0.6)');g.addColorStop(0.5,'rgba(0,210,255,0.2)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,16,16);return new THREE.CanvasTexture(c)})(),
-    blending: THREE.AdditiveBlending, depthWrite: false, transparent: true,
+    map: sharedGlowTex,
+    blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6,
   }));
   miniGlow.scale.set(1.5, 1.5, 1);
   miniGlow.position.copy(mesh.position);
@@ -1273,9 +1283,10 @@ function animate(t){
     }
   }
 
-  // Update constellations
-  constelUpdateCounter = (constelUpdateCounter || 0) + dt;
-  if (constelUpdateCounter > 3) { constelUpdateCounter = 0; updateConstellations(); }
+  // Update constellations (throttled)
+  if (!window._cuc) window._cuc = 0;
+  window._cuc += dt;
+  if (window._cuc > 3) { window._cuc = 0; updateConstellations(); }
 
   // Auto-pilot camera drift (gentle slow rotation when not being dragged)
   if (!isDragging) {
