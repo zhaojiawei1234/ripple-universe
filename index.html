@@ -617,10 +617,13 @@ const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || 
 const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
 // ==================== CONFIG ====================
-// Use tunnel backend if on GitHub Pages, else local
-const API = (location.hostname.includes('github.io'))
-  ? 'https://maintains-conversation-documentation-betty.trycloudflare.com'
-  : window.location.origin;
+// Dynamic API: on GitHub Pages, fetch config from same domain; else use local
+let API = window.location.origin;
+if (location.hostname.includes('github.io')) {
+  fetch(location.origin + '/api-url.json', {cache:'no-cache'})
+    .then(r=>r.json()).then(url=>{API=url;console.log('API:',API);checkBackend().then(()=>{if(backendOnline)updateConnectionUI()})})
+    .catch(()=>{API=null;console.log('API offline')});
+}
 
 // Real online explorer tracking
 let explorerId = Math.random().toString(36).slice(2,10);
