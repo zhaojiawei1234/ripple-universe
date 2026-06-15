@@ -162,6 +162,7 @@ renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 
 const scene=new THREE.Scene();
+scene.background=new THREE.Color('#050515');
 if(!isMobile)scene.fog=new THREE.FogExp2('#050510',.0003);
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.5,200);
 camera.position.set(0,0,35);
@@ -185,7 +186,7 @@ const sfCount=isMobile?600:2000;
 const sfPos=new Float32Array(sfCount*3),sfCol=new Float32Array(sfCount*3);
 for(let i=0;i<sfCount;i++){var th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),rr=20+Math.random()*60;sfPos[i*3]=Math.sin(ph)*Math.cos(th)*rr;sfPos[i*3+1]=Math.sin(ph)*Math.sin(th)*rr;sfPos[i*3+2]=Math.cos(ph)*rr;var c=new THREE.Color().setHSL(.55+Math.random()*.2,.5,.4+Math.random()*.6);sfCol[i*3]=c.r;sfCol[i*3+1]=c.g;sfCol[i*3+2]=c.b}
 sfGeo.setAttribute('position',new THREE.BufferAttribute(sfPos,3));sfGeo.setAttribute('color',new THREE.BufferAttribute(sfCol,3));
-const sfMat=new THREE.PointsMaterial({size:.15,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.85});
+const sfMat=new THREE.PointsMaterial({size:.3,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.9});
 const starfield=new THREE.Points(sfGeo,sfMat);scene.add(starfield);
 
 // Nebulae
