@@ -811,9 +811,10 @@ async function loadCommitStars(){
   }
   // Merge local
   const allPledges = [...pledges.map(p=>({text:p.text,avatar:p.avatar,id:p.id,fromServer:true})), ...localPledges.map((p,i)=>({text:p.text,avatar:p.avatar,id:'local_'+i,fromServer:false}))];
-  // Deduplicate by text
+  // Deduplicate by text + sort by time (newest first)
   const seen=new Set();
   const unique=allPledges.filter(p=>{if(seen.has(p.text))return false;seen.add(p.text);return true});
+  unique.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   unique.forEach((p,i)=>createCommitStar(p,i));
   document.getElementById('totalStars').textContent=unique.length.toLocaleString();
   document.getElementById('bigNum').textContent=unique.length.toLocaleString();
@@ -1223,11 +1224,13 @@ async function loadWallPledges(){
   }catch{}
   // Merge local
   if(!pledges.length)pledges=localPledges.slice().reverse();
-  // Also add local pledges not yet synced
+  // Merge local - add unsynced local pledges, then sort by time
   if(backendOnline){
     const serverTexts=new Set(pledges.map(p=>p.text));
-    localPledges.forEach(p=>{if(!serverTexts.has(p.text))pledges.unshift({id:'local',text:p.text,avatar:p.avatar,created_at:p.time})});
+    localPledges.forEach(p=>{if(!serverTexts.has(p.text))pledges.push({id:'local',text:p.text,avatar:p.avatar,created_at:p.time})});
   }
+  // Sort by time - newest first
+  pledges.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
   if(!pledges.length){
     list.innerHTML=`<div class="wall-empty"><div class="we-icon">🌊</div>${t('wallEmpty')}<br>${t('wallEmpty2')}</div>`;

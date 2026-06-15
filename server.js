@@ -131,6 +131,46 @@ app.post('/api/pledges', (req, res) => {
   if (text.length > 200) {
     return res.status(400).json({ error: '承诺内容不能超过200字' });
   }
+  // Reject corrupted/non-UTF8 text
+  try {
+    const encoded = Buffer.from(text, 'utf-8').toString('utf-8');
+    if (encoded !== text || text.includes('�')) {
+      return res.status(400).json({ error: '内容编码异常，请重新输入' });
+    }
+  } catch {
+    return res.status(400).json({ error: '内容编码异常' });
+  }
+
+  // ===== Content Moderation =====
+  const bannedWords = [
+    // 政治敏感
+    '习近平','习主席','江泽民','胡锦涛','邓小平','毛泽东','周恩来',
+    '共产党','国民党','民进党','台独','藏独','疆独','港独','法轮功','六四','天安门',
+    '反党','反华','颠覆','革命','暴动','起义','政变','推翻',
+    // 色情低俗
+    '裸体','裸聊','色情','成人','黄色','淫秽','做爱','性交','性爱','约炮',
+    '嫖娼','卖淫','妓女','鸡巴','操你','傻逼','脑残','弱智','妈的','他妈',
+    'fuck','shit','porn','sex',
+    // 暴力血腥
+    '杀人','自杀','杀人犯','爆炸','炸弹','恐怖','恐怖分子','斩首','分尸','肢解',
+    '屠','虐杀','残杀','碎尸','割喉',
+    // 赌博诈骗
+    '赌博','赌场','博彩','彩票','六合彩','外围','时时彩',
+    '刷单','兼职招聘','加微信','加我微信','QQ群','加群','私聊',
+    '贷款','借钱','网贷','无抵押','信用卡套现','套现',
+    // 毒品违禁
+    '毒品','吸毒','大麻','海洛因','冰毒','摇头丸','K粉','可卡因',
+    '枪支','手枪','步枪','弹药','炸药','雷管',
+    '假币','假钞','假钱','发票代开','代开发票',
+  ];
+
+  const lowerText = text.toLowerCase();
+  for (const word of bannedWords) {
+    if (lowerText.includes(word.toLowerCase())) {
+      console.log('[审核拦截]', req.ip, ':', text.substring(0, 50));
+      return res.status(400).json({ error: '内容包含违规信息，请重新输入' });
+    }
+  }
 
   const store = loadStore();
   const avatars = ['🌱','🌟','💪','🕊️','🔥','🌊','🎯','💎','🦋','🌈'];
