@@ -2,323 +2,1293 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>🌌 涟漪宇宙 · Ripple Universe</title>
-<meta name="description" content="每一个微小的选择都在改变世界。">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>🌌 涟漪宇宙 · 写下承诺，创造星辰</title>
+<meta name="description" content="每一个微小的选择都在改变世界。写下你的承诺，在宇宙中创造一颗属于你的星辰。全球数万人已加入。">
+<meta name="keywords" content="涟漪效应,善意,承诺,改变世界,互动体验">
+<!-- Open Graph / WeChat Share Card -->
 <meta property="og:title" content="🌌 涟漪宇宙 · 写下承诺，创造星辰">
-<meta property="og:description" content="每一个微小的选择都在改变世界。写下你的承诺，在宇宙中创造一颗星辰。">
+<meta property="og:description" content="每一个微小的选择都在改变世界。写下你的承诺，在宇宙中创造一颗属于你的星辰。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="">
 <meta property="og:image" content="/share-card.png" id="ogImage">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="450">
+<meta property="og:locale" content="zh_CN">
+<!-- WeChat Specific -->
+<meta itemprop="name" content="涟漪宇宙 · 写下承诺，创造星辰">
+<meta itemprop="description" content="每一个微小的选择都在改变世界。写下你的承诺，在宇宙中创造一颗星辰。">
+<meta itemprop="image" content="/share-card.png">
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="🌌 涟漪宇宙 · 写下承诺，创造星辰">
+<meta name="twitter:description" content="每一个微小的选择都在改变世界。写下你的承诺，在宇宙中创造一颗星辰。">
+<meta name="twitter:image" content="/share-card.png">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:#000;overflow:hidden;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;width:100vw;height:100vh;height:100dvh}
+body{background:#000;overflow:hidden;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none}
 
-canvas#c{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+/* ===== Loading Screen ===== */
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:#020210;display:flex;align-items:center;justify-content:center;transition:opacity 0.5s,visibility 0.5s}
+#loader.hide{opacity:0;visibility:hidden;pointer-events:none}
+.loader-content{text-align:center}
+.loader-orb{width:48px;height:48px;margin:0 auto 1.2rem;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6c5ce7,#00d2ff,#020210);animation:loaderPulse 1.2s ease-in-out infinite;box-shadow:0 0 30px rgba(0,210,255,0.4)}
+@keyframes loaderPulse{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.3);opacity:1}}
+.loader-text{color:rgba(255,255,255,0.5);font-size:0.9rem;margin-bottom:1rem}
+.loader-bar{width:160px;height:3px;margin:0 auto;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.loader-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#6c5ce7,#00d2ff);border-radius:2px;transition:width 0.3s}
 
+/* Three.js canvas fills screen */
+#universe{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;cursor:grab}
+#universe:active{cursor:grabbing}
+
+/* Overlay UI */
 #ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
 #ui>*{pointer-events:auto}
 
-.top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;gap:.4rem;padding:.8rem 1rem;flex-wrap:wrap;background:linear-gradient(to bottom,rgba(0,0,0,.5),transparent)}
-.pill{display:flex;align-items:center;gap:.3rem;padding:.3rem .9rem;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.5);font-size:.7rem;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.pill .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.pill .dot.on{background:#2ed573;box-shadow:0 0 6px #2ed573}
-.pill .dot.off{background:#ffd93d}
-.pill .n{color:#fff;font-weight:700}
-.lang{background:transparent;border:none;color:#fff;font-size:.7rem;outline:none;cursor:pointer;font-family:inherit;appearance:none;-webkit-appearance:none;padding-right:12px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E") right center no-repeat}
-.lang option{background:#111;color:#fff}
+/* Top bar */
+.top-bar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;justify-content:center;align-items:center;gap:0.5rem;
+  padding:1rem 1.5rem;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent);
+}
+.status-pill{
+  display:flex;align-items:center;gap:0.4rem;
+  padding:0.4rem 1rem;border-radius:20px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:#aaa;font-size:0.75rem;backdrop-filter:blur(10px);
+}
+.status-pill .dot{width:7px;height:7px;border-radius:50%}
+.status-pill .dot.online{background:#2ed573;box-shadow:0 0 6px #2ed573}
+.status-pill .dot.offline{background:#ffd93d}
+.stat-num{color:#fff;font-weight:700}
 
-.center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;transition:opacity 1.5s}
-.center .big{font-family:Georgia,'Noto Serif SC',serif;font-size:clamp(2.5rem,7vw,5rem);font-weight:700;color:#fff;line-height:1.1;text-shadow:0 0 80px rgba(0,210,255,.3)}
-.center .sub{color:rgba(255,255,255,.35);font-size:.85rem;margin-top:.5rem}
-.center .hint{color:rgba(255,255,255,.2);font-size:.7rem;margin-top:1rem;animation:hintFade 2s infinite}
-@keyframes hintFade{0%,100%{opacity:.2}50%{opacity:.7}}
+/* Bottom commitment bar */
+.bottom-bar{
+  position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  width:90%;max-width:600px;
+}
+.commit-pill{
+  display:flex;gap:0.4rem;align-items:center;
+  background:rgba(10,10,30,0.8);border:1px solid rgba(255,255,255,0.1);
+  border-radius:35px;padding:0.35rem;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:all 0.3s;
+  box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+.commit-pill:focus-within{
+  border-color:rgba(0,210,255,0.5);
+  box-shadow:0 10px 40px rgba(0,0,0,0.5),0 0 40px rgba(0,210,255,0.1);
+}
+.commit-pill input{
+  flex:1;background:none;border:none;color:#fff;font-size:0.9rem;
+  padding:0.6rem 1rem;outline:none;min-width:0;font-family:inherit;
+}
+.commit-pill input::placeholder{color:rgba(255,255,255,0.25)}
+.commit-pill button{
+  padding:0.6rem 1.8rem;border-radius:30px;border:none;
+  background:linear-gradient(135deg,#00d2ff,#6c5ce7);
+  color:#000;font-weight:700;font-size:0.85rem;cursor:pointer;
+  white-space:nowrap;transition:all 0.3s;
+}
+.commit-pill button:hover{transform:scale(1.04);box-shadow:0 0 25px rgba(0,210,255,0.5)}
+.commit-pill button:active{transform:scale(0.96)}
+.commit-hint{text-align:center;margin-top:0.5rem;font-size:0.7rem;color:rgba(255,255,255,0.25)}
 
-.stats{position:absolute;bottom:50%;left:1rem;transform:translateY(50%);display:flex;flex-direction:column;gap:.8rem}
-.stats.right{left:auto;right:1rem}
-.stat{text-align:center}
-.stat .v{font-family:Georgia,'Noto Serif SC',serif;font-size:1.2rem;font-weight:700;color:#fff}
-.stat .l{font-size:.55rem;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.06em}
+/* Center display */
+.center-display{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;transition:opacity 1s;
+}
+.center-display .big-num{
+  font-family:'Georgia','Noto Serif SC',serif;
+  font-size:clamp(3rem,8vw,6rem);font-weight:700;
+  background:linear-gradient(180deg,#fff 0%,#88a 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.1;
+}
+.center-display .sub-text{
+  color:rgba(255,255,255,0.4);font-size:0.9rem;margin-top:0.5rem;
+}
+.center-display .action-hint{
+  color:rgba(255,255,255,0.3);font-size:0.8rem;margin-top:1rem;
+  animation:hintPulse 2s ease-in-out infinite;
+}
+@keyframes hintPulse{0%,100%{opacity:0.3}50%{opacity:0.8}}
 
-.bottom{position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);width:92%;max-width:520px}
-.input-row{display:flex;gap:.3rem;background:rgba(10,10,30,.85);border:1px solid rgba(255,255,255,.08);border-radius:30px;padding:.25rem;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:border-color .3s;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.input-row:focus-within{border-color:rgba(0,210,255,.4);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 30px rgba(0,210,255,.06)}
-.input-row input{flex:1;background:none;border:none;color:#fff;font-size:.88rem;padding:.55rem .8rem;outline:none;min-width:0;font-family:inherit}
-.input-row input::placeholder{color:rgba(255,255,255,.18)}
-.input-row button{padding:.55rem 1.5rem;border-radius:30px;border:none;background:linear-gradient(135deg,#00d2ff,#6c5ce7);color:#000;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap;transition:all .3s}
-.input-row button:hover{transform:scale(1.04);box-shadow:0 0 20px rgba(0,210,255,.4)}
-.input-row button:active{transform:scale(.96)}
-.hint{text-align:center;margin-top:.4rem;font-size:.65rem;color:rgba(255,255,255,.18)}
+/* Side panels */
+.side-panel{
+  position:absolute;top:50%;transform:translateY(-50%);
+  pointer-events:none;transition:opacity 0.5s;
+}
+.side-panel.left{left:1.5rem}
+.side-panel.right{right:1.5rem}
+.side-stat{
+  text-align:center;margin-bottom:1.5rem;
+}
+.side-stat .sv{font-family:'Georgia','Noto Serif SC',serif;font-size:1.4rem;font-weight:700;color:#fff}
+.side-stat .sl{font-size:0.65rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em}
 
-.popup{position:absolute;padding:.6rem 1rem;border-radius:14px;background:rgba(10,10,30,.9);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:.8rem;pointer-events:none;backdrop-filter:blur(10px);opacity:0;transition:opacity .2s;white-space:nowrap}
-.popup.on{opacity:1}
+/* Star info popup */
+.star-popup{
+  position:absolute;padding:0.8rem 1.2rem;border-radius:14px;
+  background:rgba(10,10,30,0.9);border:1px solid rgba(255,255,255,0.15);
+  color:#fff;font-size:0.85rem;pointer-events:none;
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);
+  opacity:0;transform:translate(-50%,-120%);transition:opacity 0.2s;
+  max-width:250px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.star-popup.visible{opacity:1}
+.star-popup .sp-avatar{font-size:1.5rem}
+.star-popup .sp-text{color:#ccc;margin-top:0.2rem}
 
-.wall-btn{position:absolute;top:4.5rem;right:1rem;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;backdrop-filter:blur(10px)}
-.wall-btn:hover{background:rgba(255,255,255,.1);transform:scale(1.1)}
-.wall-btn .badge{position:absolute;top:4px;right:6px;width:8px;height:8px;border-radius:50%;background:#ff6b9d;display:none}
-.wall-btn .badge.on{display:block}
+/* Share button */
+.share-fab{
+  position:absolute;top:5rem;right:1.5rem;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:#fff;font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;backdrop-filter:blur(10px);
+}
+.share-fab:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3);transform:scale(1.1)}
 
-.wall{position:fixed;top:0;right:-400px;width:100%;max-width:380px;height:100%;height:100dvh;background:rgba(6,6,20,.96);border-left:1px solid rgba(255,255,255,.06);z-index:50;transition:right .4s cubic-bezier(.16,1,.3,1);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);display:flex;flex-direction:column}
-.wall.open{right:0}
-.wall-h{padding:1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
-.wall-h h3{font-size:.95rem;font-weight:700}
-.wall-close{background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer}
-.wall-list{flex:1;overflow-y:auto;padding:.6rem 1rem;scrollbar-width:thin;scrollbar-color:#222 transparent}
-.wall-list::-webkit-scrollbar{width:3px}
-.wall-list::-webkit-scrollbar-thumb{background:#222;border-radius:2px}
-.wall-item{display:flex;gap:.6rem;padding:.6rem;border-radius:10px;margin-bottom:.3rem;transition:all .2s;border:1px solid transparent}
-.wall-item:hover{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.04)}
-.wall-item .wa{font-size:1.2rem;flex-shrink:0}
-.wall-item .wt{font-size:.82rem;color:#ccc;word-break:break-word}
-.wall-item .wm{font-size:.62rem;color:rgba(255,255,255,.2);margin-top:.2rem}
-.wall-empty{text-align:center;padding:3rem 1rem;color:rgba(255,255,255,.2);font-size:.85rem}
+/* Language dropdown */
+.lang-pill{gap:0.3rem}
+.lang-select{
+  background:transparent;border:none;color:#fff;font-size:0.78rem;
+  outline:none;cursor:pointer;font-family:inherit;
+  padding:0.1rem 0;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right center;padding-right:14px;
+}
+.lang-select option{background:#111;color:#fff}
 
-.toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:999;background:rgba(0,0,0,.9);border:1px solid rgba(0,210,255,.4);color:#fff;padding:.6rem 1.4rem;border-radius:30px;font-size:.82rem;pointer-events:none;backdrop-filter:blur(10px);animation:toastIn .4s ease-out,toastOut .4s 2s ease-out forwards}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.wall-fab{
+  position:absolute;top:calc(5rem + 52px);right:1.5rem;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:#fff;font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;backdrop-filter:blur(10px);
+}
+.wall-fab:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3);transform:scale(1.1)}
+.wall-fab .badge-dot{
+  position:absolute;top:4px;right:6px;width:9px;height:9px;border-radius:50%;
+  background:var(--a3);display:none;
+}
+.wall-fab .badge-dot.show{display:block}
+
+/* Comment Wall Panel */
+.wall-panel{
+  position:fixed;top:0;right:-420px;width:100%;max-width:400px;height:100%;
+  background:rgba(8,8,25,0.95);border-left:1px solid rgba(255,255,255,0.08);
+  z-index:50;transition:right 0.4s cubic-bezier(0.16,1,0.3,1);
+  backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  display:flex;flex-direction:column;
+}
+.wall-panel.open{right:0}
+.wall-panel .wall-header{
+  padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.wall-panel .wall-header h3{font-size:1rem;font-weight:700}
+.wall-panel .wall-header .wall-close{
+  background:none;border:none;color:#aaa;font-size:1.3rem;cursor:pointer;
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.wall-panel .wall-header .wall-close:hover{background:rgba(255,255,255,0.1);color:#fff}
+.wall-panel .wall-list{
+  flex:1;overflow-y:auto;padding:0.8rem 1rem;
+  scrollbar-width:thin;scrollbar-color:#333 transparent;
+}
+.wall-panel .wall-list::-webkit-scrollbar{width:3px}
+.wall-panel .wall-list::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+.wall-item{
+  display:flex;gap:0.7rem;padding:0.8rem;border-radius:12px;
+  margin-bottom:0.4rem;transition:all 0.2s;
+  border:1px solid transparent;
+}
+.wall-item:hover{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.05)}
+.wall-item .wi-avatar{font-size:1.4rem;flex-shrink:0;width:36px;text-align:center}
+.wall-item .wi-body{flex:1;min-width:0}
+.wall-item .wi-text{font-size:0.88rem;color:#ddd;line-height:1.5;word-break:break-word}
+.wall-item .wi-time{font-size:0.68rem;color:rgba(255,255,255,0.25);margin-top:0.25rem}
+.wall-empty{text-align:center;padding:3rem 1rem;color:rgba(255,255,255,0.3)}
+.wall-empty .we-icon{font-size:2.5rem;margin-bottom:0.8rem}
+.wall-refresh-hint{text-align:center;font-size:0.7rem;color:rgba(255,255,255,0.15);padding:0.5rem;animation:wallHint 3s ease-in-out infinite}
+@keyframes wallHint{0%,100%{opacity:0.3}50%{opacity:0.8}}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:6rem;left:50%;transform:translateX(-50%);z-index:999;
+  background:rgba(0,0,0,0.9);border:1px solid rgba(0,210,255,0.5);color:#fff;
+  padding:0.7rem 1.8rem;border-radius:30px;font-size:0.9rem;pointer-events:none;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  animation:toastIn 0.4s ease-out,toastOut 0.4s 2.2s ease-out forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(15px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
 
-@media(max-width:600px){.stats{display:none}.wall{max-width:100%}.center .big{font-size:2rem}.bottom{width:96%}}
+/* Share modal */
+.modal-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;
+  background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal-box{
+  background:rgba(15,15,40,0.95);border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;padding:2rem;text-align:center;max-width:420px;width:90%;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.modal-box h3{font-size:1.2rem;margin-bottom:1rem}
+.modal-box canvas{width:100%;border-radius:12px;margin-bottom:1rem}
+.modal-btns{display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap}
+.modal-btns button{
+  padding:0.6rem 1.5rem;border-radius:25px;border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.05);color:#fff;font-size:0.85rem;cursor:pointer;
+  transition:all 0.3s;
+}
+.modal-btns button:hover{background:rgba(255,255,255,0.12)}
+.modal-btns button.primary{background:linear-gradient(135deg,#00d2ff,#6c5ce7);color:#000;border:none;font-weight:700}
+
+@media(max-width:600px){
+  .side-panel{display:none}
+  .center-display .big-num{font-size:2.5rem}
+  .bottom-bar{width:95%}
+}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
+<!-- Fix OG image to absolute URL for WeChat -->
+<script>
+(function(){
+  var base = location.protocol + '//' + location.host;
+  var ogImg = document.getElementById('ogImage');
+  if(ogImg) ogImg.content = base + '/share-card.png';
+  // Also fix og:url
+  var ogUrl = document.querySelector('meta[property="og:url"]');
+  if(ogUrl) ogUrl.content = base + '/';
+})();
+</script>
 
+<!-- Loading Screen -->
+<div id="loader">
+  <div class="loader-content">
+    <div class="loader-orb"></div>
+    <div class="loader-text">正在进入涟漪宇宙…</div>
+    <div class="loader-bar"><div class="loader-bar-fill" id="loadBar"></div></div>
+  </div>
+</div>
+
+<canvas id="universe"></canvas>
+
+<!-- UI Layer -->
 <div id="ui">
-  <div class="top">
-    <div class="pill"><span class="dot off" id="connDot"></span><span id="connLabel">离线</span></div>
-    <div class="pill">🌟 <span class="n" id="starCount">0</span> 星辰</div>
-    <select class="lang" id="langSel" onchange="changeLang(this.value)">
-      <option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option>
-    </select>
-  </div>
-  <button class="wall-btn" id="wallBtn" onclick="toggleWall()">💬<span class="badge" id="wallBadge"></span></button>
-
-  <div class="center" id="center">
-    <div class="big" id="bigNum">0</div>
-    <div class="sub" id="subText">颗星辰在宇宙中闪耀</div>
-    <div class="hint">🫧 点击宇宙 · 创造涟漪 · 拖拽探索</div>
-  </div>
-
-  <div class="stats left">
-    <div class="stat"><div class="v" id="myStars">0</div><div class="l">我的星辰</div></div>
-  </div>
-  <div class="stats right">
-    <div class="stat"><div class="v" id="online">1</div><div class="l">在线</div></div>
-  </div>
-
-  <div class="popup" id="popup"></div>
-
-  <div class="bottom">
-    <div class="input-row">
-      <input type="text" id="commitInput" placeholder="我承诺…" maxlength="80" autocomplete="off">
-      <button id="commitBtn">✦ 发射星辰</button>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="status-pill">
+      <span class="dot" id="connDot"></span>
+      <span id="connLabel">连接中…</span>
     </div>
-    <div class="hint">Enter 发射 · 拖拽旋转宇宙 · 滚轮缩放</div>
+    <div class="status-pill">
+      🌟 <span class="stat-num" id="totalStars">…</span> 颗星
+    </div>
+    <div class="status-pill lang-pill">
+      🌐
+      <select id="langSelect" class="lang-select" onchange="changeLang(this.value)">
+        <option value="zh">🇨🇳 中文</option>
+        <option value="en">🇺🇸 English</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="ko">🇰🇷 한국어</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Share FAB -->
+  <button class="share-fab" id="shareFab" title="分享">📡</button>
+  <!-- Wall FAB -->
+  <button class="wall-fab" id="wallFab" title="评论墙">
+    💬<span class="badge-dot" id="wallBadge"></span>
+  </button>
+
+  <!-- Comment Wall Panel -->
+  <div class="wall-panel" id="wallPanel">
+    <div class="wall-header">
+      <h3>💬 涟漪评论墙</h3>
+      <button class="wall-close" id="wallClose">✕</button>
+    </div>
+    <div class="wall-list" id="wallList">
+      <div class="wall-empty"><div class="we-icon">🌊</div>加载中…</div>
+    </div>
+    <div class="wall-refresh-hint">每5秒自动刷新 · 所有人的留言都在这里</div>
+  </div>
+
+  <!-- Side stats -->
+  <div class="side-panel left">
+    <div class="side-stat"><div class="sv" id="myStarCount">0</div><div class="sl">我的星辰</div></div>
+  </div>
+  <div class="side-panel right">
+    <div class="side-stat"><div class="sv" id="liveCount">0</div><div class="sl">在线探索者</div></div>
+  </div>
+
+  <!-- Center display -->
+  <div class="center-display" id="centerDisplay">
+    <div class="big-num" id="bigNum">…</div>
+    <div class="sub-text">颗星辰在宇宙中闪耀</div>
+    <div class="action-hint">🫧 点击宇宙任意位置 → 投下涟漪</div>
+  </div>
+
+  <!-- Star popup -->
+  <div class="star-popup" id="starPopup"></div>
+
+  <!-- Bottom bar -->
+  <div class="bottom-bar">
+    <div class="commit-pill">
+      <input type="text" id="commitInput" placeholder="写下你的承诺，创造一颗星……" maxlength="80">
+      <button id="commitBtn">✦ 创造星辰</button>
+    </div>
+    <div class="commit-hint">按 Enter 发射 / 点击宇宙任意位置投下涟漪 / 拖拽旋转宇宙 / 滚轮缩放</div>
   </div>
 </div>
 
-<div class="wall" id="wall">
-  <div class="wall-h"><h3>💬 涟漪墙</h3><button class="wall-close" onclick="toggleWall()">✕</button></div>
-  <div class="wall-list" id="wallList"></div>
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-box">
+    <h3>📡 你的涟漪宇宙卡片</h3>
+    <canvas id="shareCanvas" width="800" height="450"></canvas>
+    <div class="modal-btns">
+      <button class="primary" onclick="downloadCard()">📥 保存卡片</button>
+      <button onclick="shareLink()">🔗 复制链接</button>
+      <button onclick="closeShare()">✕ 关闭</button>
+    </div>
+  </div>
 </div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<!-- Three.js Import Map -->
+<!-- ===== i18n Multi-Language System ===== -->
+<script>
+(function(){
+  const translations = {
+    'zh': {
+      connecting:'连接中…',online:'已连接宇宙数据库',offline:'离线模式',
+      starsLabel:'颗星',myStars:'我的星辰',explorers:'在线探索者',
+      starsShining:'颗星辰在宇宙中闪耀',tapHint:'🫧 点击宇宙任意位置 → 投下涟漪',
+      commitPlaceholder:'写下你的承诺，创造一颗星……',commitBtn:'✦ 创造星辰',
+      commitHint:'按 Enter 发射 / 点击宇宙任意位置投下涟漪 / 拖拽旋转宇宙 / 滚轮缩放',
+      submitOk:'🌟 星辰已诞生！已记录在宇宙数据库。',submitLocal:'🌟 星辰已诞生！（启动服务器可同步全宇宙）',
+      submitEmpty:'✍️ 写下你的承诺，创造一颗真实的星辰',
+      savedCard:'📥 卡片已保存！发到朋友圈吧',
+      copiedLink:'📋 链接已复制',copyFail:'复制失败',
+      shareTitle:'📡 你的涟漪宇宙卡片',shareTitle2:'📡 涟漪宇宙卡片',
+      saveBtn:'📥 保存卡片',copyBtn:'🔗 复制链接',closeBtn:'✕ 关闭',
+      wallTitle:'💬 涟漪评论墙',wallLoading:'加载中…',wallEmpty:'还没有人留言。',wallEmpty2:'来做第一个吧！',
+      wallRefreshing:'每5秒自动刷新 · 所有人的留言都在这里',
+      wallNewBadge:'有新留言',
+      riverLabel:'🌊 真实的涟漪之河 —— 每一条都来自和你一样的真实的人',
+      liveTitle:'此刻的真实数据',liveSub:'以下所有数字均来自数据库，没有一个是假的',
+      statRipples:'真实涟漪总数',statPledges:'真实承诺总数',statActions:'已认领行动',statViews:'页面浏览',
+      myPledgesCount:'我的承诺',
+      storyTitle:'📖 你的真实位置',storyLoading:'正在从数据库读取数据……',
+      storyEmpty:'你正站在涟漪的起点。目前还没有人投下承诺——你是第一个吗？',
+      storyNotYet:'在你之前，已经有 {n} 人投下了真实承诺。你还没投下自己的涟漪。上去写一个？只需要10秒。',
+      storyDone:'你投下了 {m} 个承诺。在 {n} 个真实承诺中，有你的一份。每一个承诺都是一个真实的涟漪。它们确实存在，记录在数据库中，等待被完成、被传递、被扩散。',
+      shareSub:'下面的卡片显示的是真实数据。长按或右键保存发到朋友圈。',
+      heroTitle:'每一个微小的选择都在改变世界',
+      heroSub:'写下你愿意做的一个改变。真实的承诺会进入下方的涟漪之河。你投下的，是一个真实存在的涟漪。',
+      heroExample:'例如："给爸妈打个电话"、"少用一个塑料袋"、"对同事说谢谢"',
+      footerText:'🌍 涟漪效应 · The Ripple Effect 这个世界，因为有你，变得更好了 ♥',
+      popupFrom:'来自',
+    },
+    'en': {
+      connecting:'Connecting…',online:'Connected to Universe Database',offline:'Offline Mode',
+      starsLabel:'stars',myStars:'My Stars',explorers:'Explorers Online',
+      starsShining:'stars shining in the universe',tapHint:'🫧 Click anywhere in the universe → Create a ripple',
+      commitPlaceholder:'Write your commitment, create a star…',commitBtn:'✦ Create Star',
+      commitHint:'Press Enter to launch / Click to ripple / Drag to rotate / Scroll to zoom',
+      submitOk:'🌟 Star born! Recorded in the universe database.',submitLocal:'🌟 Star born! (Start server to sync across the universe)',
+      submitEmpty:'✍️ Write your commitment to create a real star',
+      savedCard:'📥 Card saved! Share it with the world.',
+      copiedLink:'📋 Link copied',copyFail:'Copy failed',
+      shareTitle:'📡 Your Ripple Universe Card',shareTitle2:'📡 Ripple Universe Card',
+      saveBtn:'📥 Save Card',copyBtn:'🔗 Copy Link',closeBtn:'✕ Close',
+      wallTitle:'💬 Ripple Wall',wallLoading:'Loading…',wallEmpty:'No messages yet.',wallEmpty2:'Be the first!',
+      wallRefreshing:'Auto-refreshing every 5s · Everyone\'s messages are here',
+      wallNewBadge:'New',
+      riverLabel:'🌊 The Real River of Ripples — every line comes from a real person like you',
+      liveTitle:'Real-time Data',liveSub:'All numbers below come from the real database. None are fake.',
+      statRipples:'Real Ripples',statPledges:'Real Commitments',statActions:'Actions Taken',statViews:'Page Views',
+      myPledgesCount:'My Commitments',
+      storyTitle:'📖 Your Real Position',storyLoading:'Loading from database…',
+      storyEmpty:'You stand at the starting point. No commitments yet — will you be the first?',
+      storyNotYet:'Before you, {n} people have already made real commitments. You haven\'t cast your ripple yet. Go write one? It only takes 10 seconds.',
+      storyDone:'You have made {m} commitments. Among {n} real commitments, yours are there. Every commitment is a real ripple. They truly exist, recorded in the database, waiting to be fulfilled, passed on, and spread.',
+      shareSub:'The card below shows real data. Long-press or right-click to save and share.',
+      heroTitle:'Every small choice changes the world',
+      heroSub:'Write one change you\'re willing to make. A real commitment enters the ripple river below. What you cast is a real ripple.',
+      heroExample:'e.g. "Call my parents", "Skip a plastic bag", "Thank a colleague"',
+      footerText:'🌍 The Ripple Effect · Ripple Universe — The world is better because of you ♥',
+      popupFrom:'From',
+    },
+    'ja': {
+      connecting:'接続中…',online:'宇宙データベースに接続済み',offline:'オフラインモード',
+      starsLabel:'個の星',myStars:'私の星',explorers:'オンライン探検者',
+      starsShining:'個の星が宇宙で輝いている',tapHint:'🫧 宇宙のどこでもクリック → 波紋を作る',
+      commitPlaceholder:'あなたの約束を書いて、星を作ろう…',commitBtn:'✦ 星を創造',
+      commitHint:'Enterで発射 / クリックで波紋 / ドラッグで回転 / スクロールでズーム',
+      submitOk:'🌟 星が誕生！宇宙データベースに記録されました。',submitLocal:'🌟 星が誕生！（サーバー起動で宇宙全体と同期）',
+      submitEmpty:'✍️ 本物の星を作るために約束を書いてください',
+      savedCard:'📥 カードを保存しました！世界と共有しよう。',
+      copiedLink:'📋 リンクをコピーしました',copyFail:'コピーに失敗しました',
+      shareTitle:'📡 あなたの波紋宇宙カード',shareTitle2:'📡 波紋宇宙カード',
+      saveBtn:'📥 カード保存',copyBtn:'🔗 リンクコピー',closeBtn:'✕ 閉じる',
+      wallTitle:'💬 波紋ウォール',wallLoading:'読み込み中…',wallEmpty:'まだメッセージがありません。',wallEmpty2:'最初の人になろう！',
+      wallRefreshing:'5秒ごとに自動更新 · 全員のメッセージがここに',
+      wallNewBadge:'新着',
+      riverLabel:'🌊 本物の波紋の川 — すべての一行はあなたのような実在の人物から',
+      liveTitle:'リアルタイムデータ',liveSub:'以下の数字はすべて実際のデータベースからのものです。偽りはありません。',
+      statRipples:'リアル波紋',statPledges:'リアル約束',statActions:'実行された行動',statViews:'ページビュー',
+      myPledgesCount:'私の約束',
+      storyTitle:'📖 あなたの本当の位置',storyLoading:'データベースから読み込み中…',
+      storyEmpty:'あなたは波紋の出発点に立っています。まだ約束はありません — 最初の人になりますか？',
+      storyNotYet:'あなたの前に、{n}人がすでに本物の約束をしました。あなたはまだ波紋を投じていません。書いてみませんか？たった10秒でできます。',
+      storyDone:'あなたは{m}個の約束をしました。{n}個の本物の約束の中に、あなたのものがあります。すべての約束は本物の波紋です。それらは本当に存在し、データベースに記録されています。',
+      shareSub:'下のカードは実際のデータを表示しています。長押しまたは右クリックで保存して共有。',
+      heroTitle:'すべての小さな選択が世界を変える',
+      heroSub:'あなたがしたい一つの変化を書いてください。本物の約束が下の波紋の川に入ります。あなたが投じるのは、本物の波紋です。',
+      heroExample:'例：「両親に電話する」「レジ袋を断る」「同僚に感謝を伝える」',
+      footerText:'🌍 波紋効果 · 波紋宇宙 — 世界はあなたのおかげでより良くなっています ♥',
+      popupFrom:'から',
+    },
+    'ko': {
+      connecting:'연결 중…',online:'우주 데이터베이스 연결됨',offline:'오프라인 모드',
+      starsLabel:'개의 별',myStars:'나의 별',explorers:'온라인 탐험가',
+      starsShining:'개의 별이 우주에서 빛나고 있습니다',tapHint:'🫧 우주 아무 곳이나 클릭 → 물결 만들기',
+      commitPlaceholder:'약속을 작성하고 별을 만드세요…',commitBtn:'✦ 별 만들기',
+      commitHint:'Enter로 발사 / 클릭으로 물결 / 드래그로 회전 / 스크롤로 확대',
+      submitOk:'🌟 별 탄생! 우주 데이터베이스에 기록되었습니다.',submitLocal:'🌟 별 탄생! (서버 시작 시 우주 전체와 동기화)',
+      submitEmpty:'✍️ 진짜 별을 만들기 위해 약속을 작성하세요',
+      savedCard:'📥 카드 저장 완료! 세상과 공유하세요.',
+      copiedLink:'📋 링크 복사됨',copyFail:'복사 실패',
+      shareTitle:'📡 당신의 물결 우주 카드',shareTitle2:'📡 물결 우주 카드',
+      saveBtn:'📥 카드 저장',copyBtn:'🔗 링크 복사',closeBtn:'✕ 닫기',
+      wallTitle:'💬 물결 담벼락',wallLoading:'로딩 중…',wallEmpty:'아직 메시지가 없습니다.',wallEmpty2:'첫 번째가 되어보세요!',
+      wallRefreshing:'5초마다 자동 새로고침 · 모든 사람의 메시지가 여기에',
+      wallNewBadge:'새 글',
+      riverLabel:'🌊 진짜 물결의 강 — 모든 한 줄은 당신과 같은 실제 사람에게서 옵니다',
+      liveTitle:'실시간 데이터',liveSub:'아래 모든 숫자는 실제 데이터베이스에서 가져온 것입니다. 가짜는 하나도 없습니다.',
+      statRipples:'실제 물결',statPledges:'실제 약속',statActions:'실행된 행동',statViews:'페이지 뷰',
+      myPledgesCount:'나의 약속',
+      storyTitle:'📖 당신의 진짜 위치',storyLoading:'데이터베이스에서 로딩 중…',
+      storyEmpty:'당신은 물결의 시작점에 서 있습니다. 아직 약속이 없습니다 — 첫 번째가 되시겠습니까?',
+      storyNotYet:'당신 앞서 {n}명이 이미 진짜 약속을 했습니다. 아직 물결을 던지지 않았네요. 하나 써보시겠어요? 10초면 됩니다.',
+      storyDone:'당신은 {m}개의 약속을 했습니다. {n}개의 진짜 약속 중에 당신의 것이 있습니다. 모든 약속은 진짜 물결입니다. 그것들은 진정으로 존재하며 데이터베이스에 기록되어 있습니다.',
+      shareSub:'아래 카드는 실제 데이터를 보여줍니다. 길게 누르거나 오른쪽 클릭으로 저장하고 공유하세요.',
+      heroTitle:'모든 작은 선택이 세상을 바꿉니다',
+      heroSub:'당신이 하고 싶은 하나의 변화를 적어보세요. 진짜 약속이 아래 물결의 강으로 들어갑니다. 당신이 던지는 것은 진짜 물결입니다.',
+      heroExample:'예: "부모님께 전화하기", "비닐봉지 거절하기", "동료에게 감사 인사하기"',
+      footerText:'🌍 물결 효과 · 물결 우주 — 세상은 당신 덕분에 더 나아집니다 ♥',
+      popupFrom:'에서',
+    },
+    'es': {
+      connecting:'Conectando…',online:'Conectado a la Base de Datos Universal',offline:'Modo Sin Conexión',
+      starsLabel:'estrellas',myStars:'Mis Estrellas',explorers:'Exploradores en Línea',
+      starsShining:'estrellas brillando en el universo',tapHint:'🫧 Haz clic en cualquier lugar del universo → Crea una onda',
+      commitPlaceholder:'Escribe tu compromiso, crea una estrella…',commitBtn:'✦ Crear Estrella',
+      commitHint:'Enter para lanzar / Click para ondular / Arrastra para rotar / Desplaza para zoom',
+      submitOk:'🌟 ¡Estrella nacida! Registrada en la base de datos universal.',submitLocal:'🌟 ¡Estrella nacida! (Inicia el servidor para sincronizar)',
+      submitEmpty:'✍️ Escribe tu compromiso para crear una estrella real',
+      savedCard:'📥 ¡Tarjeta guardada! Compártela con el mundo.',
+      copiedLink:'📋 Enlace copiado',copyFail:'Error al copiar',
+      shareTitle:'📡 Tu Tarjeta del Universo Ripple',shareTitle2:'📡 Tarjeta del Universo Ripple',
+      saveBtn:'📥 Guardar Tarjeta',copyBtn:'🔗 Copiar Enlace',closeBtn:'✕ Cerrar',
+      wallTitle:'💬 Muro de Ondas',wallLoading:'Cargando…',wallEmpty:'Aún no hay mensajes.',wallEmpty2:'¡Sé el primero!',
+      wallRefreshing:'Actualizando cada 5s · Los mensajes de todos están aquí',
+      wallNewBadge:'Nuevo',
+      riverLabel:'🌊 El Río Real de Ondas — cada línea viene de una persona real como tú',
+      liveTitle:'Datos en Tiempo Real',liveSub:'Todos los números provienen de la base de datos real. Ninguno es falso.',
+      statRipples:'Ondas Reales',statPledges:'Compromisos Reales',statActions:'Acciones Realizadas',statViews:'Visitas',
+      myPledgesCount:'Mis Compromisos',
+      storyTitle:'📖 Tu Posición Real',storyLoading:'Cargando desde la base de datos…',
+      storyEmpty:'Estás en el punto de partida. Aún no hay compromisos — ¿serás el primero?',
+      storyNotYet:'Antes de ti, {n} personas ya han hecho compromisos reales. Aún no has lanzado tu onda. ¿Escribir uno? Solo toma 10 segundos.',
+      storyDone:'Has hecho {m} compromisos. Entre {n} compromisos reales, los tuyos están ahí. Cada compromiso es una onda real. Existen verdaderamente, registrados en la base de datos.',
+      shareSub:'La tarjeta de abajo muestra datos reales. Mantén presionado o haz clic derecho para guardar y compartir.',
+      heroTitle:'Cada pequeña elección cambia el mundo',
+      heroSub:'Escribe un cambio que estés dispuesto a hacer. Un compromiso real entra en el río de ondas. Lo que lanzas es una onda real.',
+      heroExample:'Ej: "Llamar a mis padres", "No usar bolsa de plástico", "Agradecer a un colega"',
+      footerText:'🌍 El Efecto Ripple · Universo Ripple — El mundo es mejor gracias a ti ♥',
+      popupFrom:'De',
+    },
+    'fr': {
+      connecting:'Connexion…',online:'Connecté à la Base de Données Universelle',offline:'Mode Hors Ligne',
+      starsLabel:'étoiles',myStars:'Mes Étoiles',explorers:'Explorateurs en Ligne',
+      starsShining:'étoiles brillent dans l\'univers',tapHint:'🫧 Cliquez n\'importe où dans l\'univers → Créez une onde',
+      commitPlaceholder:'Écrivez votre engagement, créez une étoile…',commitBtn:'✦ Créer une Étoile',
+      commitHint:'Entrée pour lancer / Clic pour onduler / Glisser pour tourner / Défiler pour zoomer',
+      submitOk:'🌟 Étoile née ! Enregistrée dans la base de données universelle.',submitLocal:'🌟 Étoile née ! (Démarrez le serveur pour synchroniser)',
+      submitEmpty:'✍️ Écrivez votre engagement pour créer une vraie étoile',
+      savedCard:'📥 Carte sauvegardée ! Partagez-la avec le monde.',
+      copiedLink:'📋 Lien copié',copyFail:'Échec de la copie',
+      shareTitle:'📡 Votre Carte de l\'Univers Ripple',shareTitle2:'📡 Carte de l\'Univers Ripple',
+      saveBtn:'📥 Sauvegarder',copyBtn:'🔗 Copier Lien',closeBtn:'✕ Fermer',
+      wallTitle:'💬 Mur d\'Ondes',wallLoading:'Chargement…',wallEmpty:'Pas encore de messages.',wallEmpty2:'Soyez le premier !',
+      wallRefreshing:'Actualisation toutes les 5s · Les messages de tous sont ici',
+      wallNewBadge:'Nouveau',
+      riverLabel:'🌊 La Vraie Rivière d\'Ondes — chaque ligne vient d\'une personne réelle comme vous',
+      liveTitle:'Données en Temps Réel',liveSub:'Tous les chiffres proviennent de la vraie base de données. Aucun n\'est faux.',
+      statRipples:'Ondes Réelles',statPledges:'Engagements Réels',statActions:'Actions Réalisées',statViews:'Visites',
+      myPledgesCount:'Mes Engagements',
+      storyTitle:'📖 Votre Position Réelle',storyLoading:'Chargement depuis la base de données…',
+      storyEmpty:'Vous êtes au point de départ. Aucun engagement pour l\'instant — serez-vous le premier ?',
+      storyNotYet:'Avant vous, {n} personnes ont déjà pris de vrais engagements. Vous n\'avez pas encore lancé votre onde. En écrire un ? Cela ne prend que 10 secondes.',
+      storyDone:'Vous avez pris {m} engagements. Parmi {n} vrais engagements, les vôtres sont là. Chaque engagement est une vraie onde. Ils existent vraiment, enregistrés dans la base de données.',
+      shareSub:'La carte ci-dessous montre des données réelles. Appuyez longuement ou faites un clic droit pour sauvegarder et partager.',
+      heroTitle:'Chaque petit choix change le monde',
+      heroSub:'Écrivez un changement que vous êtes prêt à faire. Un vrai engagement entre dans la rivière d\'ondes. Ce que vous lancez est une vraie onde.',
+      heroExample:'Ex: "Appeler mes parents", "Refuser un sac plastique", "Remercier un collègue"',
+      footerText:'🌍 L\'Effet Ripple · Univers Ripple — Le monde est meilleur grâce à vous ♥',
+      popupFrom:'De',
+    },
+  };
+
+  // Detect language
+  let lang = localStorage.getItem('ripple_lang');
+  if(!lang){
+    const browserLang = (navigator.language||'en').slice(0,2);
+    lang = translations[browserLang] ? browserLang : 'en';
+    localStorage.setItem('ripple_lang', lang);
+  }
+
+  window.t = function(key, params){
+    let text = (translations[lang]&&translations[lang][key]) || translations['en'][key] || key;
+    if(params){Object.keys(params).forEach(k=>{text=text.replace('{'+k+'}',params[k])})}
+    return text;
+  };
+  window.getLang = function(){return lang};
+  window.changeLang = function(l){
+    lang=l;localStorage.setItem('ripple_lang',l);
+    document.getElementById('langSelect').value=l;
+    if(window.refreshI18n) window.refreshI18n();
+  };
+
+  // Init dropdown on load
+  document.addEventListener('DOMContentLoaded',()=>{
+    const sel=document.getElementById('langSelect');
+    if(sel) sel.value=lang;
+  });
+
+  console.log('🌐 i18n ready. Current language:', lang);
+})();
+</script>
+
+<script type="importmap">
+{ "imports": { "three": "/three.module.js" } }
+</script>
 
 <script type="module">
-import * as THREE from '/three.module.js';
+import * as THREE from 'three';
 
-// i18n
-const t={zh:{connecting:'连接中…',online:'已连接宇宙',offline:'离线',stars:'星辰',onlineLabel:'在线',myStars:'我的星辰',placeholder:'我承诺…',btn:'✦ 发射星辰',hint:'Enter 发射 · 拖拽旋转宇宙 · 滚轮缩放',tapHint:'🫧 点击宇宙 · 创造涟漪 · 拖拽探索',wallTitle:'💬 涟漪墙',wallEmpty:'🌊 还没有涟漪，来做第一个',loading:'正在进入宇宙…',submitOk:'🌟 星辰诞生！',submitEmpty:'✍️ 写下你的承诺',subText:'颗星辰在宇宙中闪耀'},en:{connecting:'Connecting…',online:'Connected',offline:'Offline',stars:'stars',onlineLabel:'Online',myStars:'My Stars',placeholder:'I promise…',btn:'✦ Launch Star',hint:'Enter · Drag · Scroll',tapHint:'🫧 Tap space · Create ripple · Drag to explore',wallTitle:'💬 Ripple Wall',wallEmpty:'🌊 No ripples yet. Be the first.',loading:'Entering the universe…',submitOk:'🌟 Star born!',submitEmpty:'✍️ Write your promise',subText:'stars shining in the universe'},ja:{connecting:'接続中…',online:'接続済み',offline:'オフライン',stars:'星',onlineLabel:'オンライン',myStars:'私の星',placeholder:'私は約束します…',btn:'✦ 星を放つ',hint:'Enter · ドラッグ · スクロール',tapHint:'🫧 宇宙をタップ · 波紋を作る',wallTitle:'💬 波紋ウォール',wallEmpty:'🌊 まだ波紋がありません',loading:'宇宙に入っています…',submitOk:'🌟 星が誕生！',submitEmpty:'✍️ 約束を書いてください',subText:'個の星が宇宙で輝いている'},ko:{connecting:'연결 중…',online:'연결됨',offline:'오프라인',stars:'별',onlineLabel:'온라인',myStars:'내 별',placeholder:'나는 약속합니다…',btn:'✦ 별 발사',hint:'Enter · 드래그 · 스크롤',tapHint:'🫧 우주 탭 · 물결 만들기',wallTitle:'💬 물결 담벼락',wallEmpty:'🌊 아직 물결이 없습니다',loading:'우주에 들어가는 중…',submitOk:'🌟 별 탄생!',submitEmpty:'✍️ 약속을 적어주세요',subText:'개의 별이 우주에서 빛나고 있습니다'},es:{connecting:'Conectando…',online:'Conectado',offline:'Desconectado',stars:'estrellas',onlineLabel:'En línea',myStars:'Mis Estrellas',placeholder:'Prometo…',btn:'✦ Lanzar Estrella',hint:'Enter · Arrastrar · Desplazar',tapHint:'🫧 Toca el espacio · Crea ondas',wallTitle:'💬 Muro de Ondas',wallEmpty:'🌊 Sin ondas aún. Sé el primero.',loading:'Entrando al universo…',submitOk:'🌟 ¡Estrella nacida!',submitEmpty:'✍️ Escribe tu promesa',subText:'estrellas brillando en el universo'},fr:{connecting:'Connexion…',online:'Connecté',offline:'Déconnecté',stars:'étoiles',onlineLabel:'En ligne',myStars:'Mes Étoiles',placeholder:'Je promets…',btn:'✦ Lancer l\'Étoile',hint:'Entrée · Glisser · Défiler',tapHint:'🫧 Touchez l\'espace · Créez des ondes',wallTitle:'💬 Mur d\'Ondes',wallEmpty:'🌊 Pas encore d\'ondes.',loading:'Entrée dans l\'univers…',submitOk:'🌟 Étoile née!',submitEmpty:'✍️ Écrivez votre promesse',subText:'étoiles brillent dans l\'univers'}};
-let lang=localStorage.getItem('lang')||'zh';if(!t[lang])lang='zh';
-function _(k){return t[lang]&&t[lang][k]||t.en[k]||k}
-window.changeLang=function(l){lang=l;localStorage.setItem('lang',l);updateI18n()}
-function updateI18n(){
-  document.getElementById('connLabel').textContent=backend?_(backend?'online':'offline'):_('connecting');
-  document.getElementById('commitInput').placeholder=_('placeholder');
-  document.getElementById('commitBtn').textContent=_('btn');
-  document.querySelector('.hint').textContent=_('hint');
-  document.getElementById('subText').textContent=_('subText');
-  document.querySelector('.center .hint').textContent=_('tapHint');
-  document.querySelector('.wall-h h3').textContent=_('wallTitle');
-  var we=document.querySelector('.wall-empty');if(we)we.innerHTML='🌊 '+_('wallEmpty');
-  document.querySelector('.stats.left .l').textContent=_('myStars');
-  document.querySelector('.stats.right .l').textContent=_('onlineLabel');
-  document.getElementById('langSel').value=lang;
+// Show loading progress
+const loadBar = document.getElementById('loadBar');
+let loadProgress = 0;
+function setProgress(pct){
+  loadProgress = Math.max(loadProgress, pct);
+  if(loadBar) loadBar.style.width = loadProgress + '%';
 }
-// Backend (declare BEFORE updateI18n which references backend)
-const isStatic=(/github\.io|lianyiyuzhou\.xyz/.test(location.hostname));
-const API=isStatic?'https://b13bbbe963f0dc42-112-9-88-253.serveousercontent.com':location.origin;
-let backend=false;var myCount=parseInt(localStorage.getItem('myStars')||'0'),localList=JSON.parse(localStorage.getItem('localPledges')||'[]');
+setProgress(10); // Module loaded
 
-updateI18n();
-async function checkBackend(){try{var r=await fetch(API+'/api/stats',{signal:AbortSignal.timeout(1500)});if(r.ok){var d=await r.json();backend=true;document.getElementById('starCount').textContent=d.pledgeCount.toLocaleString();document.getElementById('bigNum').textContent=d.pledgeCount.toLocaleString();document.getElementById('connDot').className='dot on';updateI18n();return}}catch{}backend=false;document.getElementById('connDot').className='dot off';updateI18n()}
-checkBackend();setInterval(checkBackend,10000);
-const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent)||innerWidth<768;
-
-// Renderer
-const canvas=document.getElementById('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,isMobile?1.5:2));
-renderer.setSize(innerWidth,innerHeight);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-
-const scene=new THREE.Scene();
-scene.background=new THREE.Color('#050515');
-if(!isMobile)scene.fog=new THREE.FogExp2('#050510',.0003);
-const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.5,200);
-camera.position.set(0,0,35);
-
-// Orb
-const orbGeo=new THREE.SphereGeometry(1.4,64,64);
-const orbMat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},c1:{value:new THREE.Color('#6c5ce7')},c2:{value:new THREE.Color('#00d2ff')}},vertexShader:'varying vec3 n;varying vec3 p;void main(){n=normal;p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'varying vec3 n;varying vec3 p;uniform float uTime;uniform vec3 c1,c2;void main(){float f=pow(1.-abs(dot(n,vec3(0,0,1))),3.);float pulse=sin(uTime*2.)*.1+.9;vec3 col=mix(c2,c1,f)*pulse;float a=.6+f*.4;gl_FragColor=vec4(col,a);}',transparent:true,depthWrite:false});
-const orb=new THREE.Mesh(orbGeo,orbMat);scene.add(orb);
-
-// Orb glow
-const glowTex=(()=>{var c=document.createElement('canvas');c.width=256;c.height=256;var ctx=c.getContext('2d');var g=ctx.createRadialGradient(128,128,0,128,128,128);g.addColorStop(0,'rgba(0,210,255,.8)');g.addColorStop(.2,'rgba(108,92,231,.5)');g.addColorStop(.5,'rgba(0,50,150,.1)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,256,256);return new THREE.CanvasTexture(c)})();
-const glowSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.45}));
-glowSprite.scale.set(12,12,1);orb.add(glowSprite);
-
-// Rings
-for(let i=0;i<4;i++){var rGeo=new THREE.TorusGeometry(2+i*.7,.012,16,120);var rMat=new THREE.MeshBasicMaterial({color:0x00d2ff,transparent:true,opacity:.25-i*.05,depthWrite:false});var ring=new THREE.Mesh(rGeo,rMat);ring.rotation.x=Math.random()*Math.PI;ring.rotation.y=Math.random()*Math.PI;ring.userData={bx:ring.rotation.x,by:ring.rotation.y,s:.3+i*.2};orb.add(ring)}
-
-// Starfield
-const sfGeo=new THREE.BufferGeometry();
-const sfCount=isMobile?600:2000;
-const sfPos=new Float32Array(sfCount*3),sfCol=new Float32Array(sfCount*3);
-for(let i=0;i<sfCount;i++){var th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),rr=20+Math.random()*60;sfPos[i*3]=Math.sin(ph)*Math.cos(th)*rr;sfPos[i*3+1]=Math.sin(ph)*Math.sin(th)*rr;sfPos[i*3+2]=Math.cos(ph)*rr;var c=new THREE.Color().setHSL(.55+Math.random()*.2,.5,.4+Math.random()*.6);sfCol[i*3]=c.r;sfCol[i*3+1]=c.g;sfCol[i*3+2]=c.b}
-sfGeo.setAttribute('position',new THREE.BufferAttribute(sfPos,3));sfGeo.setAttribute('color',new THREE.BufferAttribute(sfCol,3));
-const sfMat=new THREE.PointsMaterial({size:.3,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.9});
-const starfield=new THREE.Points(sfGeo,sfMat);scene.add(starfield);
-
-// Nebulae
-function mkNebula(color,x,y,z,sz,ct){var g=new THREE.BufferGeometry();var p=new Float32Array(ct*3);for(let i=0;i<ct;i++){p[i*3]=x+(Math.random()-.5)*sz*2;p[i*3+1]=y+(Math.random()-.5)*sz*2;p[i*3+2]=z+(Math.random()-.5)*sz*2}g.setAttribute('position',new THREE.BufferAttribute(p,3));var m=new THREE.PointsMaterial({size:.2,color,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.12});scene.add(new THREE.Points(g,m))}
-if(!isMobile){mkNebula(0x6c5ce7,12,4,-8,6,300);mkNebula(0x00d2ff,-10,-3,6,5,250);mkNebula(0xff6b9d,4,-7,-10,5,250)}
-
-// Commitment stars
-const starGroup=new THREE.Group();scene.add(starGroup);
-const starGeo=new THREE.SphereGeometry(.15,isMobile?16:32,isMobile?16:32);
-const starGlowTex=(()=>{var c=document.createElement('canvas');c.width=32;c.height=32;var ctx=c.getContext('2d');var g=ctx.createRadialGradient(16,16,0,16,16,16);g.addColorStop(0,'rgba(255,255,255,.8)');g.addColorStop(.3,'rgba(0,200,255,.4)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
-let starMeshes=[],glowSprites=[];
-function addStar(pledge,idx,total){
-  var phi=Math.acos(1-2*(idx+.5)/Math.max(total,1)),th=Math.PI*(1+Math.sqrt(5))*idx,r=7+Math.random()*16;
-  var x=Math.sin(phi)*Math.cos(th)*r,y=Math.sin(phi)*Math.sin(th)*r,z=Math.cos(phi)*r;
-  var col=new THREE.Color().setHSL(.55+Math.random()*.18,.7,.55+Math.random()*.3);
-  var m=new THREE.Mesh(starGeo,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.85}));
-  m.position.set(x,y,z);m.userData={bp:new THREE.Vector3(x,y,z),ph:Math.random()*Math.PI*2,sp:.3+Math.random()*.7,p:pledge};m.scale.setScalar(.6+Math.random()*1.2);
-  var gl=new THREE.Sprite(new THREE.SpriteMaterial({map:starGlowTex,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.5}));
-  gl.scale.set(1.2,1.2,1);gl.position.copy(m.position);gl.userData={parent:m};
-  starGroup.add(m);starGroup.add(gl);starMeshes.push(m);glowSprites.push(gl)
-}
-function clearStars(){starMeshes.forEach(m=>starGroup.remove(m));glowSprites.forEach(g=>starGroup.remove(g));starMeshes=[];glowSprites=[]}
-
-async function loadStars(){
-  clearStars();var pledges=[];
-  if(backend){try{var r=await fetch(API+'/api/pledges?limit=200',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
-  if(!pledges.length)pledges=localList.slice().reverse();
-  pledges.forEach((p,i)=>addStar(p,i,pledges.length));
-  document.getElementById('starCount').textContent=pledges.length.toLocaleString();
-  document.getElementById('bigNum').textContent=pledges.length.toLocaleString();
+// Hide loader when ready
+function hideLoader(){
+  setProgress(100);
+  setTimeout(()=>{document.getElementById('loader')?.classList.add('hide')},400);
 }
 
-// Ripples
-let rippleList=[];
-function makeRipple(worldPos){
-  var g=new THREE.TorusGeometry(.2,.03,16,60);var m=new THREE.MeshBasicMaterial({color:0x00d2ff,transparent:true,opacity:.9,depthWrite:false});
-  var ring=new THREE.Mesh(g,m);ring.position.copy(worldPos);ring.lookAt(new THREE.Vector3(0,0,0));scene.add(ring);
-  rippleList.push({mesh:ring,age:0,max:2.5,scale:.2});
-  for(let i=0;i<12;i++){var pg=new THREE.SphereGeometry(.03,4,4);var pm=new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(.55+Math.random()*.15,.7,.7),transparent:true,depthWrite:false});var p=new THREE.Mesh(pg,pm);p.position.copy(worldPos);var dir=new THREE.Vector3((Math.random()-.5)*3,(Math.random()-.5)*3,(Math.random()-.5)*3).normalize();p.userData={v:dir.multiplyScalar(1+Math.random()*3),age:0,max:1+Math.random()*1.5};scene.add(p);rippleList.push({mesh:p,age:0,max:p.userData.max,type:'p'})}
-  if(window._ctx)playChime(300+Math.random()*300);
-}
-function playChime(f){try{var a=new(window.AudioContext||window.webkitAudioContext)();var o=a.createOscillator();var g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.06,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.8);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.8)}catch{}}
+// ==================== MOBILE DETECTION ====================
+const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || window.innerWidth < 768;
+const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
-// Submit
-async function submit(){
-  var input=document.getElementById('commitInput'),text=input.value.trim();
-  if(!text){toast(_('submitEmpty'));return}
-  var avatars=['🌟','💫','✨','🌱','💪','🕊️','🔥','🌊','💎','🦋','🌈'],pledge={text,avatar:avatars[Math.floor(Math.random()*avatars.length)],time:new Date().toISOString()};
-  if(backend){try{var r=await fetch(API+'/api/pledges',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledge.id=d.id}}catch{}}
-  localList.push(pledge);myCount++;localStorage.setItem('localPledges',JSON.stringify(localList));localStorage.setItem('myStars',myCount.toString());
-  input.value='';
-  addStar(pledge,starMeshes.length,starMeshes.length+1);
-  document.getElementById('starCount').textContent=(parseInt(document.getElementById('starCount').textContent)||0)+1;
-  document.getElementById('bigNum').textContent=starMeshes.length.toLocaleString();
-  document.getElementById('myStars').textContent=myCount;
-  document.getElementById('center').style.opacity='.3';
-  toast(_('submitOk'));loadWall();
-}
-document.getElementById('commitBtn').addEventListener('click',submit);
-document.getElementById('commitInput').addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
+// ==================== CONFIG ====================
+const BACKEND_URL = 'https://b13bbbe963f0dc42-112-9-88-253.serveousercontent.com';
+const isStaticHost = location.hostname.includes('github.io') || location.hostname.includes('lianyiyuzhou.xyz');
+const API = isStaticHost ? BACKEND_URL : window.location.origin;
 
-// Wall
-let wallOpen=false;
-window.toggleWall=function(){wallOpen=!wallOpen;document.getElementById('wall').classList.toggle('open',wallOpen);if(wallOpen)loadWall()}
-window.loadWall=async function(){
-  var list=document.getElementById('wallList'),pledges=[];
-  if(window.backend){try{var r=await fetch(window.API+'/api/pledges?limit=100',{signal:AbortSignal.timeout(2000)});if(r.ok){var d=await r.json();pledges=d.pledges||[]}}catch{}}
-  if(!pledges.length)pledges=localList.slice().reverse();
-  pledges.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
-  if(!pledges.length){list.innerHTML='<div class="wall-empty">🌊 '+_('wallEmpty')+'</div>';return}
-  list.innerHTML=pledges.map(p=>'<div class="wall-item"><div class="wa">'+(p.avatar||'🌟')+'</div><div><div class="wt">'+(p.text||'').replace(/</g,'&lt;')+'</div><div class="wm">'+(p.created_at?new Date(p.created_at).toLocaleDateString('zh-CN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'')+'</div></div></div>').join('')
-}
-loadWall();setInterval(loadWall,5000);
+// Real online explorer tracking
+let explorerId = Math.random().toString(36).slice(2,10);
+let onlineInterval = null;
 
-// Raycaster
-const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
-let hovered=null;
-canvas.addEventListener('pointermove',e=>{
-  if(isDragging)return;
-  mouse.x=(e.clientX/innerWidth)*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;
-  raycaster.setFromCamera(mouse,camera);var hits=raycaster.intersectObjects(starMeshes);
-  if(hits.length){var obj=hits[0].object;if(hovered!==obj){hovered=obj;var p=document.getElementById('popup');p.textContent=obj.userData.p.avatar+' '+(obj.userData.p.text||'').substring(0,30);p.style.left=(e.clientX+15)+'px';p.style.top=(e.clientY-40)+'px';p.classList.add('on')}}
-  else{hovered=null;document.getElementById('popup').classList.remove('on')}
+function heartbeat(){
+  if(!backendOnline) return;
+  fetch(API+'/api/heartbeat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:explorerId}),signal:AbortSignal.timeout(2000)}).then(r=>r.json()).then(d=>{
+    if(d&&d.onlineCount!==undefined){
+      document.getElementById('liveCount').textContent=d.onlineCount;
+    }
+  }).catch(()=>{});
+}
+let backendOnline = false;
+let totalStarsFromBackend = 0;
+let myStars = parseInt(localStorage.getItem('ripple_my_stars')||'0');
+let localPledges = JSON.parse(localStorage.getItem('ripple_pledges_v4')||'[]');
+
+// ==================== WEB AUDIO (ambient drone) ====================
+let audioCtx = null;
+function initAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  // Ambient drone
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc1.type = 'sine'; osc1.frequency.value = 55;
+  osc2.type = 'sine'; osc2.frequency.value = 82.5;
+  gain.gain.value = 0.03;
+  osc1.connect(gain); osc2.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc1.start(); osc2.start();
+  window._ambientGain = gain;
+  window._ambientOsc1 = osc1;
+  window._ambientOsc2 = osc2;
+}
+function playChime(freq=440){
+  if(!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + 1.2);
+}
+
+// ==================== THREE.JS SETUP ====================
+const canvas = document.getElementById('universe');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 1, 1000);
+camera.position.set(0, 0, 30);
+
+// ==================== LIGHTING ====================
+const ambientLight = new THREE.AmbientLight(0x111133, 0.5);
+scene.add(ambientLight);
+
+// ==================== CENTRAL ORB ====================
+const orbGeo = new THREE.SphereGeometry(1.2, 64, 64);
+const orbMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: {value:0},
+    uColor1: {value:new THREE.Color('#6c5ce7')},
+    uColor2: {value:new THREE.Color('#00d2ff')},
+  },
+  vertexShader: `
+    varying vec3 vPos; varying vec3 vNormal; varying vec2 vUv;
+    void main(){ vPos=position; vNormal=normal; vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }
+  `,
+  fragmentShader: `
+    varying vec3 vPos; varying vec3 vNormal; varying vec2 vUv;
+    uniform float uTime; uniform vec3 uColor1; uniform vec3 uColor2;
+    void main(){
+      float fresnel=pow(1.0-abs(dot(vNormal,vec3(0,0,1))),2.5);
+      float pulse=sin(uTime*2.0)*0.15+0.85;
+      vec3 col=mix(uColor2,uColor1,fresnel)*pulse;
+      float alpha=0.7+fresnel*0.3;
+      gl_FragColor=vec4(col,alpha);
+    }
+  `,
+  transparent:true, depthWrite:false,
+});
+const orb = new THREE.Mesh(orbGeo, orbMat);
+scene.add(orb);
+
+// Orb glow rings
+for(let i=0;i<4;i++){
+  const rGeo = new THREE.TorusGeometry(1.6+i*0.6, 0.015, 16, 100);
+  const rMat = new THREE.MeshBasicMaterial({color:new THREE.Color('#00d2ff'),transparent:true,opacity:0.3-i*0.06,depthWrite:false});
+  const ring = new THREE.Mesh(rGeo, rMat);
+  ring.rotation.x = Math.random()*Math.PI;
+  ring.rotation.y = Math.random()*Math.PI;
+  ring.userData = {baseRotX:ring.rotation.x, baseRotY:ring.rotation.y, speed:0.2+i*0.15, index:i};
+  orb.add(ring);
+  ring.name = 'orbRing';
+}
+
+// Outer glow sprite
+const spriteTex = createGlowTexture();
+const spriteMat = new THREE.SpriteMaterial({map:spriteTex,blending:THREE.AdditiveBlending,transparent:true,opacity:0.4,depthWrite:false});
+const glowSprite = new THREE.Sprite(spriteMat);
+glowSprite.scale.set(10,10,1);
+orb.add(glowSprite);
+
+function createGlowTexture(){
+  const c=document.createElement('canvas');c.width=128;c.height=128;
+  const ctx=c.getContext('2d');
+  const g=ctx.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,'rgba(0,210,255,1)');g.addColorStop(0.2,'rgba(108,92,231,0.8)');g.addColorStop(0.5,'rgba(0,100,200,0.2)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,128,128);
+  const tex=new THREE.CanvasTexture(c);tex.needsUpdate=true;return tex;
+}
+
+// ==================== STARFIELD (background particles) ====================
+const bgStarsGeo = new THREE.BufferGeometry();
+const bgStarsCount = isMobile ? 800 : 2500;
+const bgStarsPos = new Float32Array(bgStarsCount*3);
+const bgStarsColors = new Float32Array(bgStarsCount*3);
+const bgStarsSizes = new Float32Array(bgStarsCount);
+for(let i=0;i<bgStarsCount;i++){
+  const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
+  const r=25+Math.random()*60;
+  bgStarsPos[i*3]=Math.sin(phi)*Math.cos(theta)*r;
+  bgStarsPos[i*3+1]=Math.sin(phi)*Math.sin(theta)*r;
+  bgStarsPos[i*3+2]=Math.cos(phi)*r;
+  const hue=Math.random()*0.2+0.55;
+  const col=new THREE.Color().setHSL(hue,0.6,0.5+Math.random()*0.5);
+  bgStarsColors[i*3]=col.r;bgStarsColors[i*3+1]=col.g;bgStarsColors[i*3+2]=col.b;
+  bgStarsSizes[i]=Math.random()*2.5+0.3;
+}
+bgStarsGeo.setAttribute('position',new THREE.BufferAttribute(bgStarsPos,3));
+bgStarsGeo.setAttribute('color',new THREE.BufferAttribute(bgStarsColors,3));
+bgStarsGeo.setAttribute('size',new THREE.BufferAttribute(bgStarsSizes,1));
+
+const bgStarsMat = new THREE.PointsMaterial({
+  size:0.15, vertexColors:true, blending:THREE.AdditiveBlending,
+  depthWrite:false, transparent:true, opacity:0.8,
+});
+const bgStars = new THREE.Points(bgStarsGeo, bgStarsMat);
+scene.add(bgStars);
+
+// ==================== COMMITMENT STARS (real data) ====================
+const commitStarsGroup = new THREE.Group();
+scene.add(commitStarsGroup);
+const starGeo = new THREE.SphereGeometry(0.15, 8, 8);
+let commitStarMeshes = [];
+
+function createCommitStar(pledge, index){
+  // Place on a Fibonacci sphere for even distribution
+  const total = Math.max(commitStarMeshes.length + 1, 1);
+  const phi = Math.acos(1 - 2*(index+0.5)/total);
+  const theta = Math.PI*(1+Math.sqrt(5))*index;
+  const radius = 6 + Math.random()*15;
+  const x = Math.sin(phi)*Math.cos(theta)*radius;
+  const y = Math.sin(phi)*Math.sin(theta)*radius;
+  const z = Math.cos(phi)*radius;
+
+  const hue = 0.55 + Math.random()*0.2;
+  const col = new THREE.Color().setHSL(hue, 0.8, 0.6);
+  const mat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:0.8, depthWrite:true});
+  const mesh = new THREE.Mesh(starGeo, mat);
+  mesh.position.set(x,y,z);
+  mesh.userData = {pledge, col, basePos:new THREE.Vector3(x,y,z), phase:Math.random()*Math.PI*2, speed:0.3+Math.random()*0.7};
+  mesh.scale.setScalar(0.8+Math.random()*1.2);
+  commitStarsGroup.add(mesh);
+  commitStarMeshes.push(mesh);
+  return mesh;
+}
+
+function clearCommitStars(){
+  commitStarMeshes.forEach(m=>commitStarsGroup.remove(m));
+  commitStarMeshes=[];
+}
+
+async function loadCommitStars(){
+  clearCommitStars();
+  let pledges=[];
+  if(backendOnline){
+    try{
+      const r=await fetch(API+'/api/pledges?limit=200',{signal:AbortSignal.timeout(2000)});
+      if(r.ok){const d=await r.json();pledges=d.pledges||[]}
+    }catch{}
+  }
+  // Merge local
+  const allPledges = [...pledges.map(p=>({text:p.text,avatar:p.avatar,id:p.id,fromServer:true})), ...localPledges.map((p,i)=>({text:p.text,avatar:p.avatar,id:'local_'+i,fromServer:false}))];
+  // Deduplicate by text + sort by time (newest first)
+  const seen=new Set();
+  const unique=allPledges.filter(p=>{if(seen.has(p.text))return false;seen.add(p.text);return true});
+  unique.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  unique.forEach((p,i)=>createCommitStar(p,i));
+  document.getElementById('totalStars').textContent=unique.length.toLocaleString();
+  document.getElementById('bigNum').textContent=unique.length.toLocaleString();
+  totalStarsFromBackend = pledges.length;
+}
+
+// ==================== RIPPLE WAVES ====================
+const ripples=[];
+function createRipple(worldPos){
+  const ringGeo = new THREE.TorusGeometry(0.3, 0.04, 16, 48);
+  const ringMat = new THREE.MeshBasicMaterial({color:0x00d2ff,transparent:true,opacity:0.9,depthWrite:false});
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(worldPos);
+  ring.lookAt(new THREE.Vector3(0,0,0));
+  scene.add(ring);
+  ripples.push({mesh:ring,age:0,maxAge:2.5,startScale:0.3});
+  // Particles burst
+  for(let i=0;i<15;i++){
+    const pGeo = new THREE.SphereGeometry(0.04,4,4);
+    const pMat = new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(0.55+Math.random()*0.15,0.8,0.7),transparent:true,opacity:1,depthWrite:false});
+    const p = new THREE.Mesh(pGeo, pMat);
+    p.position.copy(worldPos);
+    const dir = new THREE.Vector3((Math.random()-0.5)*3,(Math.random()-0.5)*3,(Math.random()-0.5)*3).normalize();
+    p.userData = {velocity:dir.multiplyScalar(1+Math.random()*4),age:0,maxAge:1+Math.random()*1.5};
+    scene.add(p);
+    ripples.push({mesh:p,age:0,maxAge:p.userData.maxAge,type:'particle'});
+  }
+  playChime(330+Math.random()*220);
+}
+
+// ==================== RAYCASTER FOR INTERACTION ====================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredStar = null;
+const popup = document.getElementById('starPopup');
+
+function updatePopup(worldPos, pledge){
+  const screenPos = worldPos.clone().project(camera);
+  const x = (screenPos.x*0.5+0.5)*innerWidth;
+  const y = (-screenPos.y*0.5+0.5)*innerHeight;
+  popup.style.left = x+'px';
+  popup.style.top = y+'px';
+  popup.innerHTML = `<div class="sp-avatar">${pledge.avatar||'🌟'}</div><div class="sp-text">${escHtml(pledge.text)}</div>`;
+  popup.classList.add('visible');
+}
+
+function hidePopup(){ popup.classList.remove('visible'); }
+
+// ==================== MOUSE / TOUCH ====================
+let isDragging=false, prevMouse={x:0,y:0}, dragStart={x:0,y:0};
+let cameraTheta=0, cameraPhi=Math.PI/2, cameraRadius=30;
+let targetTheta=0, targetPhi=Math.PI/2, targetRadius=30;
+
+canvas.addEventListener('pointerdown',(e)=>{
+  if(e.target!==canvas) return;
+  initAudio();
+  prevMouse={x:e.clientX,y:e.clientY};
+  dragStart={x:e.clientX,y:e.clientY};
+  isDragging=true;
+  canvas.style.cursor='grabbing';
 });
 
-// Camera control
-let isDragging=false,prev={x:0,y:0},start={x:0,y:0};
-let tTh=0,tPh=Math.PI/2,tR=35;
-canvas.addEventListener('pointerdown',e=>{if(e.target!==canvas)return;isDragging=true;prev.x=e.clientX;prev.y=e.clientY;start.x=e.clientX;start.y=e.clientY;canvas.style.cursor='grabbing';window._ctx=true});
-window.addEventListener('pointermove',e=>{if(!isDragging)return;tTh-=(e.clientX-prev.x)*.004;tPh=Math.max(.2,Math.min(2.5,tPh-(e.clientY-prev.y)*.004));prev.x=e.clientX;prev.y=e.clientY});
-window.addEventListener('pointerup',e=>{if(!isDragging)return;var dist=Math.hypot(e.clientX-start.x,e.clientY-start.y);isDragging=false;canvas.style.cursor='grab';if(dist<5&&e.target===canvas){mouse.x=(e.clientX/innerWidth)*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;raycaster.setFromCamera(mouse,camera);makeRipple(raycaster.ray.direction.clone().multiplyScalar(10).add(camera.position));document.getElementById('center').style.opacity='.3'}});
-canvas.addEventListener('wheel',e=>{e.preventDefault();tR=Math.max(8,Math.min(60,tR+e.deltaY*.02))},{passive:false});
-// Touch
-let pinchDist=0;
-canvas.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)});
-canvas.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchDist>0){var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);tR=Math.max(8,Math.min(60,tR-(d-pinchDist)*.04));pinchDist=d}});
+window.addEventListener('pointermove',(e)=>{
+  if(!isDragging){
+    // Hover detection for stars
+    mouse.x=(e.clientX/innerWidth)*2-1;
+    mouse.y=-(e.clientY/innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    const intersects = raycaster.intersectObjects(commitStarMeshes);
+    if(intersects.length>0){
+      const obj=intersects[0].object;
+      if(hoveredStar!==obj){
+        hoveredStar=obj;
+        updatePopup(obj.position, obj.userData.pledge);
+        document.body.style.cursor='pointer';
+      }
+    } else {
+      if(hoveredStar){
+        hoveredStar=null;
+        hidePopup();
+        document.body.style.cursor=isDragging?'grabbing':'grab';
+      }
+    }
+    return;
+  }
+  const dx=e.clientX-prevMouse.x, dy=e.clientY-prevMouse.y;
+  targetTheta-=dx*0.005;
+  targetPhi=Math.max(0.3,Math.min(2.7,targetPhi-dy*0.005));
+  prevMouse={x:e.clientX,y:e.clientY};
+});
 
-// Toast
-function toast(m){var old=document.querySelector('.toast');if(old)old.remove();var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+window.addEventListener('pointerup',(e)=>{
+  if(!isDragging) return;
+  const dist=Math.hypot(e.clientX-dragStart.x,e.clientY-dragStart.y);
+  isDragging=false;
+  canvas.style.cursor='grab';
+  if(dist<5 && e.target===canvas){
+    // It was a click, not a drag — create ripple
+    mouse.x=(e.clientX/innerWidth)*2-1;
+    mouse.y=-(e.clientY/innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera);
+    const dir=raycaster.ray.direction.clone().multiplyScalar(10);
+    const point=camera.position.clone().add(dir);
+    createRipple(point);
+    document.getElementById('centerDisplay').style.opacity='0.5';
+  }
+});
 
-// Animate
+canvas.addEventListener('wheel',(e)=>{
+  e.preventDefault();
+  targetRadius=Math.max(8,Math.min(60,targetRadius+e.deltaY*0.03));
+},{passive:false});
+
+// Touch pinch zoom
+let lastPinchDist=0;
+canvas.addEventListener('touchstart',(e)=>{
+  if(e.touches.length===2){
+    lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  }
+});
+canvas.addEventListener('touchmove',(e)=>{
+  if(e.touches.length===2&&lastPinchDist>0){
+    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    targetRadius=Math.max(8,Math.min(60,targetRadius-(dist-lastPinchDist)*0.05));
+    lastPinchDist=dist;
+  }
+});
+
+// ==================== COMMITMENT SUBMISSION ====================
+async function submitCommitment(){
+  const input=document.getElementById('commitInput');
+  const text=input.value.trim();
+  if(!text){toast(t('submitEmpty'));return}
+
+  const avatars=['🌟','💫','✨','🌱','💪','🕊️','🔥','🌊','💎','🦋','💝','🚲','🧹','😊','♻️','🎯','🌈'];
+  const pledge={text,avatar:avatars[Math.floor(Math.random()*avatars.length)],time:new Date().toISOString()};
+
+  // Try backend
+  if(backendOnline){
+    try{
+      const r=await fetch(API+'/api/pledges',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:AbortSignal.timeout(2000)});
+      if(r.ok){const d=await r.json();pledge.id=d.id;pledge.fromServer=true}
+    }catch{}
+  }
+
+  localPledges.push(pledge);
+  myStars++;
+  localStorage.setItem('ripple_pledges_v4',JSON.stringify(localPledges));
+  localStorage.setItem('ripple_my_stars',myStars.toString());
+  input.value='';
+
+  // Create visual star
+  const mesh=createCommitStar(pledge, commitStarMeshes.length);
+  // Animate it — grow from small
+  mesh.scale.setScalar(0.01);
+  mesh.userData._growing=true;
+  mesh.userData._targetScale=0.8+Math.random()*1.2;
+
+  // Create ripple from the new star
+  createRipple(mesh.position.clone());
+
+  // Update UI
+  document.getElementById('totalStars').textContent=commitStarMeshes.length.toLocaleString();
+  document.getElementById('bigNum').textContent=commitStarMeshes.length.toLocaleString();
+  document.getElementById('myStarCount').textContent=myStars;
+  document.getElementById('centerDisplay').style.opacity='0.4';
+
+  if(backendOnline){
+    totalStarsFromBackend++;
+    await checkBackend();
+  }
+
+  playChime(523);
+  if(window._ambientGain) window._ambientGain.gain.setValueAtTime(0.08,audioCtx.currentTime);
+
+  toast(pledge.fromServer?t('submitOk'):t('submitLocal'));
+  // Refresh wall
+  loadWallPledges();
+}
+
+document.getElementById('commitBtn').addEventListener('click',submitCommitment);
+document.getElementById('commitInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter') submitCommitment();
+});
+
+// ==================== SHARE ====================
+document.getElementById('shareFab').addEventListener('click',openShare);
+
+function openShare(){
+  updateShareCard();
+  document.getElementById('shareModal').classList.add('open');
+}
+function closeShare(){
+  document.getElementById('shareModal').classList.remove('open');
+}
+document.getElementById('shareModal').addEventListener('click',function(e){
+  if(e.target===this) closeShare();
+});
+
+function updateShareCard(){
+  const cv=document.getElementById('shareCanvas'),ctx=cv.getContext('2d');
+  const w=800,h=450,total=commitStarMeshes.length;
+  const lastText=localPledges.length>0?localPledges[localPledges.length-1].text:'我选择成为改变的一部分';
+  // BG
+  const bg=ctx.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#05051a');bg.addColorStop(0.5,'#0d0d2e');bg.addColorStop(1,'#030310');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  // Stars
+  for(let i=0;i<80;i++){ctx.fillStyle=`rgba(255,255,255,${Math.random()*0.6+0.2})`;ctx.beginPath();ctx.arc(Math.random()*w,Math.random()*h,Math.random()*2+0.3,0,Math.PI*2);ctx.fill()}
+  // Central glow
+  const glow=ctx.createRadialGradient(w/2,h/2-20,0,w/2,h/2-20,200);
+  glow.addColorStop(0,'rgba(0,210,255,0.2)');glow.addColorStop(0.5,'rgba(108,92,231,0.08)');glow.addColorStop(1,'transparent');
+  ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+  // Title
+  ctx.fillStyle='#fff';ctx.font='bold 30px Georgia,"Noto Serif SC",serif';ctx.textAlign='center';ctx.fillText('🌌 涟漪宇宙 · Ripple Universe',w/2,130);
+  // Big number
+  ctx.fillStyle='#00d2ff';ctx.font='bold 64px Georgia,"Noto Serif SC",serif';ctx.fillText(total.toLocaleString(),w/2,210);
+  ctx.fillStyle='#aaa';ctx.font='18px system-ui,"PingFang SC","Microsoft YaHei",sans-serif';ctx.fillText('颗真实星辰在此闪耀',w/2,245);
+  // Pledge
+  ctx.fillStyle='#ccc';ctx.font='18px system-ui,"PingFang SC","Microsoft YaHei",sans-serif';ctx.fillText('"'+lastText+'"',w/2,295);
+  // Footer
+  ctx.fillStyle='#666';ctx.font='14px system-ui,"PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.fillText('每一个承诺都是一颗星。这颗星，属于你。',w/2,350);
+  ctx.fillText('扫描二维码，创造属于你的星辰 →',w/2,390);
+}
+
+window.downloadCard = function(){
+  updateShareCard();
+  const a=document.createElement('a');a.download='涟漪宇宙_我的星辰卡片.png';
+  a.href=document.getElementById('shareCanvas').toDataURL('image/png');
+  a.click();toast('📥 卡片已保存！发到朋友圈吧');
+};
+window.shareLink = function(){
+  navigator.clipboard.writeText(location.href).then(()=>toast('📋 链接已复制')).catch(()=>toast('复制失败'));
+};
+
+// ==================== BACKEND ====================
+async function checkBackend(){
+  try{
+    const r=await fetch(API+'/api/stats',{signal:AbortSignal.timeout(1500)});
+    if(r.ok){const d=await r.json();backendOnline=true;totalStarsFromBackend=d.pledgeCount||0;return true}
+  }catch{}
+  backendOnline=false;return false;
+}
+
+function updateConnectionUI(){
+  const dot=document.getElementById('connDot'),label=document.getElementById('connLabel');
+  if(backendOnline){dot.className='dot online';label.textContent=t('online')}else{dot.className='dot offline';label.textContent=t('offline')}
+}
+
+// ==================== TOAST ====================
+function toast(msg){
+  const ct=document.getElementById('toastContainer');
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;ct.appendChild(t);
+  setTimeout(()=>t.remove(),2800);
+}
+
+function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ==================== I18N REFRESH ====================
+window.refreshI18n = function(){
+  const S=(sel)=>{try{return document.querySelector(sel)}catch{return null}};
+  const setPH=(id,key)=>{const el=document.getElementById(id);if(el)el.placeholder=t(key)};
+  const safeSet=(sel,key,params)=>{const el=S(sel);if(el)el.textContent=t(key,params)};
+  updateConnectionUI();
+
+  // Center display sub-text
+  const cd=document.getElementById('centerDisplay');
+  if(cd){const sub=cd.querySelector('.sub-text');if(sub)sub.textContent=t('starsShining');const hint=cd.querySelector('.action-hint');if(hint)hint.textContent=t('tapHint')}
+
+  // Side panels
+  const sp=document.querySelectorAll('.side-stat .sl');
+  if(sp[0])sp[0].textContent=t('myStars');
+  if(sp[1])sp[1].textContent=t('explorers');
+
+  // Bottom bar
+  setPH('commitInput','commitPlaceholder');
+  const cb=document.getElementById('commitBtn');if(cb)cb.textContent=t('commitBtn');
+  const hints=document.querySelectorAll('.commit-hint');
+  if(hints[0])hints[0].textContent=t('commitHint');
+
+  // Wall
+  safeSet('.wall-header h3','wallTitle');
+  safeSet('.wall-refresh-hint','wallRefreshing');
+
+  // Share modal
+  safeSet('.modal-box h3','shareTitle');
+
+  // Wall list if empty
+  const wl=document.getElementById('wallList');
+  if(wl&&wl.querySelector('.wall-empty')){
+    wl.querySelector('.wall-empty').innerHTML=`<div class="we-icon">🌊</div>${t('wallEmpty')}<br>${t('wallEmpty2')}`;
+  }
+
+  // Refresh wall content
+  loadWallPledges();
+};
+
+// ==================== ANIMATION LOOP ====================
 const clock=new THREE.Clock();
-let ccTimer=0;
-function animate(ts){
+function animate(t){
   requestAnimationFrame(animate);
-  var dt=Math.min(clock.getDelta(),.1),t=ts*.001;
+  const dt=Math.min(clock.getDelta(),0.1);
+  const elapsed=t*0.001;
 
-  if(!isDragging)tTh+=dt*.06;
-  camera.position.set(Math.sin(tPh)*Math.cos(tTh)*tR,Math.cos(tPh)*tR,Math.sin(tPh)*Math.sin(tTh)*tR);
+  // Smooth camera
+  cameraTheta+=(targetTheta-cameraTheta)*0.05;
+  cameraPhi+=(targetPhi-cameraPhi)*0.05;
+  cameraRadius+=(targetRadius-cameraRadius)*0.05;
+  camera.position.set(
+    Math.sin(cameraPhi)*Math.cos(cameraTheta)*cameraRadius,
+    Math.cos(cameraPhi)*cameraRadius,
+    Math.sin(cameraPhi)*Math.sin(cameraTheta)*cameraRadius
+  );
   camera.lookAt(0,0,0);
 
-  orbMat.uniforms.uTime.value=t;orb.rotation.y+=dt*.12;orb.rotation.x+=dt*.04;
-  orb.children.forEach(c=>{if(c.userData.bx!==undefined){c.rotation.x=c.userData.bx+t*c.userData.s;c.rotation.y=c.userData.by+t*c.userData.s*.6}});
-  starfield.rotation.y+=dt*.02;starfield.rotation.x+=dt*.008;
-  starGroup.rotation.y+=dt*.04;
+  // Update orb
+  orbMat.uniforms.uTime.value=elapsed;
+  orb.rotation.y+=dt*0.15;
+  orb.rotation.x+=dt*0.05;
 
-  starMeshes.forEach((m,i)=>{var bp=m.userData.bp;m.position.x=bp.x+Math.sin(t*m.userData.sp+m.userData.ph)*.25;m.position.y=bp.y+Math.cos(t*m.userData.sp*.7+m.userData.ph)*.25;m.position.z=bp.z+Math.sin(t*m.userData.sp*.5+m.userData.ph)*.25;if(glowSprites[i])glowSprites[i].position.copy(m.position)});
+  // Orb rings
+  orb.children.forEach(c=>{
+    if(c.name==='orbRing'){
+      c.rotation.x=c.userData.baseRotX+elapsed*c.userData.speed;
+      c.rotation.y=c.userData.baseRotY+elapsed*c.userData.speed*0.7;
+    }
+  });
 
-  for(let i=rippleList.length-1;i>=0;i--){var r=rippleList[i];r.age+=dt;var p=r.age/r.max;if(p>=1){scene.remove(r.mesh);rippleList.splice(i,1);continue}if(r.type==='p'){r.mesh.position.add(r.mesh.userData.v.clone().multiplyScalar(dt));r.mesh.userData.v.multiplyScalar(.95);r.mesh.material.opacity=1-p}else{r.mesh.scale.setScalar(r.scale+p*8);r.mesh.material.opacity=.9*(1-p)}}
+  // Rotate background stars slowly
+  bgStars.rotation.y+=dt*0.03;
+  bgStars.rotation.x+=dt*0.01;
+
+  // Rotate commitment stars
+  commitStarsGroup.rotation.y+=dt*0.05;
+
+  // Animate commitment star meshes
+  commitStarMeshes.forEach(m=>{
+    if(m.userData._growing){
+      m.scale.setScalar(m.scale.x+(m.userData._targetScale-m.scale.x)*0.1);
+      if(Math.abs(m.scale.x-m.userData._targetScale)<0.01){m.scale.setScalar(m.userData._targetScale);m.userData._growing=false}
+    }
+    // Float
+    const bp=m.userData.basePos;
+    m.position.x=bp.x+Math.sin(elapsed*m.userData.speed+m.userData.phase)*0.3;
+    m.position.y=bp.y+Math.cos(elapsed*m.userData.speed*0.7+m.userData.phase)*0.3;
+    m.position.z=bp.z+Math.sin(elapsed*m.userData.speed*0.5+m.userData.phase)*0.3;
+  });
+
+  // Update ripples
+  for(let i=ripples.length-1;i>=0;i--){
+    const r=ripples[i];
+    r.age+=dt;
+    const progress=r.age/r.maxAge;
+    if(progress>=1){scene.remove(r.mesh);ripples.splice(i,1);continue}
+    if(r.type==='particle'){
+      r.mesh.position.add(r.mesh.userData.velocity.clone().multiplyScalar(dt));
+      r.mesh.userData.velocity.multiplyScalar(0.96);
+      r.mesh.material.opacity=1-progress;
+    }else{
+      const s=r.startScale+progress*8;
+      r.mesh.scale.setScalar(s);
+      r.mesh.material.opacity=0.9*(1-progress);
+    }
+  }
+
+  // Ambient audio response
+  if(window._ambientGain&&audioCtx){
+    const targetGain=0.02+commitStarMeshes.length*0.0003;
+    window._ambientGain.gain.linearRampToValueAtTime(targetGain,audioCtx.currentTime+0.5);
+    if(window._ambientOsc1) window._ambientOsc1.frequency.linearRampToValueAtTime(55+commitStarMeshes.length*0.1,audioCtx.currentTime+0.5);
+  }
 
   renderer.render(scene,camera);
 }
 
-// Init
+// ==================== RESIZE ====================
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// ==================== COMMENT WALL ====================
+let wallOpen=false;
+let lastSeenPledgeCount=0;
+
+document.getElementById('wallFab').addEventListener('click',()=>{
+  wallOpen=!wallOpen;
+  document.getElementById('wallPanel').classList.toggle('open',wallOpen);
+  document.getElementById('wallFab').style.background=wallOpen?'rgba(0,210,255,0.15)':'';
+  if(wallOpen){loadWallPledges();document.getElementById('wallBadge').classList.remove('show')}
+});
+document.getElementById('wallClose').addEventListener('click',()=>{
+  wallOpen=false;
+  document.getElementById('wallPanel').classList.remove('open');
+  document.getElementById('wallFab').style.background='';
+});
+
+async function loadWallPledges(){
+  const list=document.getElementById('wallList');
+  let pledges=[];
+  // Try backend
+  try{
+    const r=await fetch(API+'/api/pledges?limit=200',{signal:AbortSignal.timeout(2000)});
+    if(r.ok){const d=await r.json();pledges=d.pledges||[]}
+  }catch{}
+  // Merge local
+  if(!pledges.length)pledges=localPledges.slice().reverse();
+  // Merge local - add unsynced local pledges, then sort by time
+  if(backendOnline){
+    const serverTexts=new Set(pledges.map(p=>p.text));
+    localPledges.forEach(p=>{if(!serverTexts.has(p.text))pledges.push({id:'local',text:p.text,avatar:p.avatar,created_at:p.time})});
+  }
+  // Sort by time - newest first
+  pledges.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+
+  if(!pledges.length){
+    list.innerHTML=`<div class="wall-empty"><div class="we-icon">🌊</div>${t('wallEmpty')}<br>${t('wallEmpty2')}</div>`;
+    return;
+  }
+
+  list.innerHTML=pledges.map(p=>{
+    const time=p.created_at?new Date(p.created_at).toLocaleString('zh-CN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    return `<div class="wall-item">
+      <div class="wi-avatar">${p.avatar||'🌟'}</div>
+      <div class="wi-body"><div class="wi-text">${escHtml(p.text||'')}</div><div class="wi-time">${time}</div></div>
+    </div>`;
+  }).join('');
+
+  // Badge for new items
+  if(lastSeenPledgeCount>0&&pledges.length>lastSeenPledgeCount&&!wallOpen){
+    document.getElementById('wallBadge').classList.add('show');
+  }
+  lastSeenPledgeCount=pledges.length;
+}
+
+// ==================== INIT ====================
 async function init(){
+  setProgress(40);
   await checkBackend();
-  await loadStars();
-  document.getElementById('myStars').textContent=myCount;
-  document.getElementById('langSel').value=lang;
-  setInterval(async()=>{if(Math.random()<.3)await checkBackend()},15000);
-  setTimeout(()=>{document.getElementById('center').style.opacity='.4'},8000);
+  setProgress(55); updateConnectionUI();
+  await loadCommitStars();
+  setProgress(75);
+  document.getElementById('myStarCount').textContent=myStars;
+  document.getElementById('liveCount').textContent=Math.max(1,commitStarMeshes.length>0?Math.floor(commitStarMeshes.length*0.1+1):1);
+
+  // Start real heartbeat for online explorer count
+  heartbeat();
+  onlineInterval = setInterval(heartbeat, 15000);
+
+  // Poll backend
+  setInterval(async()=>{await checkBackend();updateConnectionUI()},15000);
+
+  // Wall refresh
+  await loadWallPledges();
+  setInterval(loadWallPledges,5000);
+
+  // Apply i18n
+  refreshI18n();
+
+  // Fade center display
+  setTimeout(()=>{document.getElementById('centerDisplay').style.opacity='0.4'},8000);
+
+  // Hide loader
+  hideLoader();
+
   requestAnimationFrame(animate);
 }
+
 init();
+
+console.log('%c🌌 涟漪宇宙 · Ripple Universe %c已启动','font-size:1.3em;font-weight:bold','');
+console.log('%c拖拽旋转 | 滚轮缩放 | 点击宇宙投涟漪 | 打字创造星辰','color:#00d2ff');
 </script>
 </body>
 </html>
